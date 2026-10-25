@@ -1,8 +1,8 @@
 {
   "name": "@xiaosuanli/dsh-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
-  "description": "小算狸创作插件：在 DeepSeek Harness 中连接账号、管理导演工程并制作图片与视频",
+  "description": "让用户在 DeepSeek Harness（DSH）中通过自然语言对话生成、修改并导出 AI 视频，支持故事/小说转视频与参考视频复刻。",
   "engines": {
     "node": ">=22.19.0",
     "dsh": "0.2.1-rc.2"
@@ -63,8 +63,14 @@
     "dsh-plugin",
     "deepseek-harness",
     "xiaosuanli",
-    "video",
-    "image",
-    "director"
+    "ai-video",
+    "video-generation",
+    "conversational-video",
+    "text-to-video",
+    "novel-to-video",
+    "video-remake",
+    "视频生成",
+    "小说转视频",
+    "视频复刻"
   ]
 }
