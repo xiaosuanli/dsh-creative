@@ -1,0 +1,70 @@
+{
+  "name": "@xiaosuanli/dsh-plugin",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "小算狸创作插件：在 DeepSeek Harness 中连接账号、管理导演工程并制作图片与视频",
+  "engines": {
+    "node": ">=22.19.0",
+    "dsh": "0.2.1-rc.2"
+  },
+  "exports": {
+    ".": "./host.mjs",
+    "./client": "./client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-api-session-controller",
+        "@deepseek-ai/dsh-api-workspace-controller",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-credentials": "0.2.1-rc.2",
+    "@deepseek-ai/schemastery": "~3.18.5"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5"
+  },
+  "files": [
+    "host.mjs",
+    "client.js",
+    "src/connect",
+    "skills",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "release": "node scripts/release.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaosuanli/dsh-creative.git"
+  },
+  "homepage": "https://github.com/xiaosuanli/dsh-creative#readme",
+  "bugs": {
+    "url": "https://github.com/xiaosuanli/dsh-creative/issues"
+  },
+  "author": "Xiaosuanli",
+  "license": "UNLICENSED",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "xiaosuanli",
+    "video",
+    "image",
+    "director"
+  ]
+}

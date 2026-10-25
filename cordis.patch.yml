@@ -1,0 +1,3 @@
+- insert:
+    - id: xiaosuanli-connect
+      name: '@xiaosuanli/dsh-plugin'
