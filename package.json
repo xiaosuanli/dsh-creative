@@ -46,8 +46,7 @@
     "README.md"
   ],
   "scripts": {
-    "test": "node --test test/*.test.mjs",
-    "release": "node scripts/release.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "repository": {
     "type": "git",
