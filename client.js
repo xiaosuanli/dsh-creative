@@ -149,6 +149,9 @@ window.__ModuleLoader__.load({
         return '未能打开浏览器，请复制授权链接到系统浏览器继续。';
       }
     };
+    const hostBrowserNotice = browser => browser.requested
+      ? '已请求系统默认浏览器打开授权页面；若未打开，请复制授权链接。'
+      : '系统浏览器未能启动，请复制授权链接到浏览器继续。';
     function AccountSection({ rpc, compact = false, onConnectionChange }) {
       const [state, setState] = React.useState(null);
       const [account, setAccount] = React.useState(null);
@@ -186,10 +189,21 @@ window.__ModuleLoader__.load({
           try { popup = window.open('about:blank', '_blank'); if (popup) popup.opener = null; } catch { /* retain the copy-link route */ }
         }
         let attempt;
-        try { attempt = await rpc('begin-login'); }
+        try { attempt = await rpc('begin-login', { openBrowser: window.location?.protocol === 'dsh-app:' }); }
         catch (error) { try { popup?.close(); } catch {} throw error; }
         setLogin(attempt);
-        setBrowserNotice(openAuthorizationPage(attempt.url, popup));
+        setBrowserNotice(attempt.browser?.handled ? hostBrowserNotice(attempt.browser) : openAuthorizationPage(attempt.url, popup));
+      });
+      const reopenLogin = run(async () => {
+        try {
+          if (window.location?.protocol === 'dsh-app:') {
+            const browser = await rpc('open-login', { state: login.state });
+            if (browser.handled) { setBrowserNotice(hostBrowserNotice(browser)); return; }
+          }
+          setBrowserNotice(openAuthorizationPage(login.url));
+        } catch {
+          setBrowserNotice('未能请求打开浏览器，请复制当前授权链接；链接过期时重新登录。');
+        }
       });
       const copyLogin = async () => {
         try {
@@ -210,7 +224,7 @@ window.__ModuleLoader__.load({
       const loginForm = login && h('div', { className: 'xsl-login' },
         h('div', { className: 'xsl-login-actions' },
           h('button', { type: 'button', className: 'xsl-text-button', disabled: busy,
-            onClick: () => setBrowserNotice(openAuthorizationPage(login.url)) }, h(Icon, { name: 'link', size: 14 }), '打开小算狸登录与授权页面'),
+            onClick: reopenLogin }, h(Icon, { name: 'link', size: 14 }), '打开小算狸登录与授权页面'),
           h('button', { type: 'button', className: 'xsl-text-button', disabled: busy, onClick: copyLogin }, '复制授权链接')),
         message(browserNotice, 'notice'),
         h('input', { className: 'xsl-login-url', 'aria-label': '授权链接', value: login.url, readOnly: true,

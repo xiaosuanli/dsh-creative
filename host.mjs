@@ -3,6 +3,7 @@ import z from '@deepseek-ai/schemastery';
 import { credentialKey } from '@deepseek-ai/dsh-credentials';
 import { DirectorConnect, ConnectError } from './src/connect/index.mjs';
 import { chapterReferences } from './src/connect/references.mjs';
+import { openWindowsAuthorization } from './src/connect/browser.mjs';
 
 export const name = 'xiaosuanli-connect';
 export const inject = ['connection', 'credentials', 'tools', 'skills'];
@@ -106,6 +107,7 @@ export async function apply(ctx, config) {
   let disposed = false;
   let registrations = [];
   let serial = Promise.resolve();
+  let loginAttempt;
   const clearTools = () => { for (const dispose of registrations) dispose(); registrations = []; };
   const syncTools = async () => {
     clearTools();
@@ -145,15 +147,25 @@ export async function apply(ctx, config) {
           case 'chapters': return connect.chapters(payload?.projectId);
           case 'conversation': return connect.conversation(payload?.conversationId);
           case 'open-chapter': return connect.openChapter(payload?.conversationId, payload?.chapterId, payload?.projectId);
-          case 'begin-login': return connect.beginLogin();
+          case 'begin-login': {
+            loginAttempt = connect.beginLogin();
+            return { ...loginAttempt, ...(payload?.openBrowser === true ? { browser: await openWindowsAuthorization(loginAttempt, config.siteOrigin) } : {}) };
+          }
+          case 'open-login': {
+            if (!loginAttempt || payload?.state !== loginAttempt.state || Date.parse(loginAttempt.expiresAt) <= Date.now()) {
+              throw new ConnectError('INVALID_LOGIN', '授权链接已失效，请重新点击登录并连接');
+            }
+            return openWindowsAuthorization(loginAttempt, config.siteOrigin);
+          }
           case 'complete-login': {
             if (!payload || typeof payload.code !== 'string' || payload.code.length > 128 || typeof payload.state !== 'string') throw new ConnectError('INVALID_LOGIN', '请填写当前登录的一次性授权码');
             const result = await connect.completeLogin(payload);
+            loginAttempt = undefined;
             await syncTools();
             return result;
           }
           case 'refresh': await syncTools(); return connect.status();
-          case 'disconnect': { const result = await connect.disconnect(); clearTools(); return result; }
+          case 'disconnect': { const result = await connect.disconnect(); loginAttempt = undefined; clearTools(); return result; }
           default: throw new ConnectError('NOT_FOUND', '不支持的账户操作');
         }
       });
@@ -164,7 +176,7 @@ export async function apply(ctx, config) {
     }
   };
   // Exact Connection Fetch routes are owner-only and share the Host's authenticated carrier.
-  for (const endpoint of ['status', 'account', 'projects', 'chapters', 'conversation', 'references', 'open-chapter', 'begin-login', 'complete-login', 'refresh', 'disconnect']) {
+  for (const endpoint of ['status', 'account', 'projects', 'chapters', 'conversation', 'references', 'open-chapter', 'begin-login', 'open-login', 'complete-login', 'refresh', 'disconnect']) {
     ctx.connection.fetch.register({ path: '/api/xiaosuanli/' + endpoint, methods: ['POST'], requestBody: 'buffered',
       async fetch(request) {
         let message;

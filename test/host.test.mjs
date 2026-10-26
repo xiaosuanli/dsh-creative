@@ -31,6 +31,9 @@ test('host registers isolated account UI RPC, installs tools after login and rem
     assert.equal(invalid.status, 400);
     const owner = { principal: { kind: 'owner' } };
     const begun = await handler('begin-login', {}, undefined, owner);
+    const stale = await handler('open-login', { state: 'not-the-current-attempt' });
+    assert.equal(stale.ok, false);
+    assert.equal(stale.error.code, 'INVALID_LOGIN');
     const done = await handler('complete-login', { code: 'once', state: begun.value.state }, undefined, owner);
     assert.equal(done.ok, true);
     assert.equal(JSON.stringify(done).includes('secret'), false);

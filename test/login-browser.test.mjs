@@ -9,7 +9,7 @@ const text = node => typeof node === 'string' ? node : (node?.props?.children ||
 const find = (node, predicate) => !node || typeof node !== 'object' ? undefined :
   predicate(node) ? node : (node.props?.children || []).map(child => find(child, predicate)).find(Boolean);
 
-async function account({ desktop = true, open = () => null, begin = async () => login, clipboard } = {}) {
+async function account({ desktop = true, open = () => null, begin = async () => login, reopen = async () => ({ handled: false }), clipboard } = {}) {
   const values = [], effects = [], calls = [];
   let index = 0, mounted = false, module, component, props;
   const React = {
@@ -36,7 +36,7 @@ async function account({ desktop = true, open = () => null, begin = async () => 
     inputTriggers: { registerSource() { return () => {}; } },
     connection: { rpc: { async call(_channel, method, payload) {
       calls.push({ method, payload });
-      return { ok: true, value: method.endsWith('/begin-login') ? await begin() : { connected: false } };
+      return { ok: true, value: method.endsWith('/begin-login') ? await begin() : method.endsWith('/open-login') ? await reopen() : { connected: false } };
     } } },
     slots: { inject(_name, fn) { fn(); }, register(options, view) {
       if (options.name === 'settings.section') { component = view; props = options.inject(); }
@@ -122,4 +122,29 @@ test('Web popup blocking retains the link and code entry instead of failing auth
   assert.ok(text(ui.render()).includes('浏览器可能阻止了新窗口'));
   assert.ok(find(ui.render(), node => node.type === 'input' && node.props.value === login.url));
   assert.ok(find(ui.render(), node => node.type === 'input' && node.props.placeholder === '粘贴一次性授权码'));
+});
+
+test('Windows Host browser launch and retry bypass Electron window.open and reuse server-owned state', async () => {
+  let windowCalls = 0;
+  const ui = await account({ open: () => { windowCalls++; },
+    begin: async () => ({ ...login, browser: { handled: true, requested: true } }),
+    reopen: async () => ({ handled: true, requested: true }),
+  });
+  await ui.button('登录并连接小算狸').props.onClick();
+  assert.equal(ui.calls.find(call => call.method.endsWith('/begin-login')).payload.openBrowser, true);
+  await ui.button('打开小算狸登录与授权页面').props.onClick();
+  const request = ui.calls.find(call => call.method.endsWith('/open-login'));
+  assert.equal(request.payload.state, login.state);
+  assert.deepEqual(Object.keys(request.payload), ['state']);
+  assert.equal(windowCalls, 0);
+  assert.ok(text(ui.render()).includes('已请求系统默认浏览器'));
+});
+
+test('failed Windows Host launch keeps copy fallback without attempting the broken renderer path', async () => {
+  let windowCalls = 0;
+  const ui = await account({ open: () => { windowCalls++; }, begin: async () => ({ ...login, browser: { handled: true, requested: false } }) });
+  await ui.button('登录并连接小算狸').props.onClick();
+  assert.equal(windowCalls, 0);
+  assert.ok(text(ui.render()).includes('系统浏览器未能启动'));
+  assert.ok(find(ui.render(), node => node.type === 'input' && node.props.value === login.url));
 });
