@@ -100,14 +100,14 @@ window.__ModuleLoader__.load({
       .xsl-credit span { color: var(--xsl-muted); font-size: 11px; }
       .xsl-credit strong { font-size: 21px; line-height: 1.5; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
       .xsl-quota { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; color: var(--xsl-muted); font-size: 11px; }
-      .xsl-account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-      .xsl-account-action { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 8px 11px; border: 1px solid var(--xsl-line); border-radius: 8px; background: color-mix(in srgb, var(--xsl-text) 4%, var(--dsw-alias-bg-base, #202020)); color: var(--xsl-text); font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; transition: background .15s, border-color .15s, filter .15s; }
+      .xsl-account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+      .xsl-dir .xsl-account-action { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 28px; padding: 4px 8px; border: 1px solid var(--xsl-line); border-radius: 6px; background: color-mix(in srgb, var(--xsl-text) 4%, var(--dsw-alias-bg-base, #202020)); color: var(--xsl-text); font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; transition: background .15s, border-color .15s, filter .15s; }
       .xsl-account-action:hover:not(:disabled) { background: var(--xsl-surface); border-color: var(--xsl-muted); }
       .xsl-account-action:active:not(:disabled) { filter: brightness(.92); }
-      .xsl-account-action.xsl-reauthorize { background: var(--xsl-accent); border-color: var(--xsl-accent); color: var(--dsw-alias-label-primary-foreground, #fff); }
-      .xsl-account-action.xsl-reauthorize:hover:not(:disabled) { filter: brightness(1.12); }
-      .xsl-account-action.xsl-disconnect { margin-left: auto; color: #d65c5c; border-color: color-mix(in srgb, #d65c5c 55%, var(--xsl-line)); background: color-mix(in srgb, #d65c5c 5%, var(--dsw-alias-bg-base, #202020)); }
-      .xsl-account-action.xsl-disconnect:hover:not(:disabled) { background: color-mix(in srgb, #d65c5c 12%, var(--dsw-alias-bg-base, #202020)); border-color: #d65c5c; }
+      .xsl-dir .xsl-account-action.xsl-reauthorize { background: var(--xsl-accent); border-color: var(--xsl-accent); color: var(--dsw-alias-label-primary-foreground, #fff); }
+      .xsl-dir .xsl-account-action.xsl-reauthorize:hover:not(:disabled) { filter: brightness(1.12); }
+      .xsl-dir .xsl-account-action.xsl-disconnect { margin-left: auto; color: #d65c5c; border-color: color-mix(in srgb, #d65c5c 55%, var(--xsl-line)); background: color-mix(in srgb, #d65c5c 5%, var(--dsw-alias-bg-base, #202020)); }
+      .xsl-dir .xsl-account-action.xsl-disconnect:hover:not(:disabled) { background: color-mix(in srgb, #d65c5c 12%, var(--dsw-alias-bg-base, #202020)); border-color: #d65c5c; }
       .xsl-text-button { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; background: transparent; border: 0; padding: 3px 0; color: var(--xsl-muted); }
       .xsl-text-button:hover:not(:disabled) { color: var(--xsl-text); }
       .xsl-connect-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--xsl-line); border-radius: 12px; }
@@ -306,9 +306,9 @@ window.__ModuleLoader__.load({
           h('span', null, '视频已用 ' + format(account.credits?.video?.usedCredits) + ' / ' + format(account.credits?.video?.limitCredits)),
           account.membership && h('span', null, (account.membership.videoMaxResolution || '未包含视频权益') + ' · 并发 ' + format(account.membership.videoConcurrency))),
         h('div', { className: 'xsl-account-actions' },
-          h('button', { type: 'button', className: 'xsl-account-action', disabled: busy, onClick: run(refresh) }, h(Icon, { name: 'refresh', size: 14 }), '刷新额度'),
-          h('button', { type: 'button', className: 'xsl-account-action xsl-reauthorize', disabled: busy, onClick: begin }, h(Icon, { name: 'link', size: 14 }), '重新授权'),
-          h('button', { type: 'button', className: 'xsl-account-action xsl-disconnect', disabled: busy, onClick: disconnect }, h(Icon, { name: 'unlink', size: 14 }), '断开连接')),
+          h('button', { type: 'button', className: 'xsl-account-action', disabled: busy, onClick: run(refresh) }, h(Icon, { name: 'refresh', size: 12 }), '刷新额度'),
+          h('button', { type: 'button', className: 'xsl-account-action xsl-reauthorize', disabled: busy, onClick: begin }, h(Icon, { name: 'link', size: 12 }), '重新授权'),
+          h('button', { type: 'button', className: 'xsl-account-action xsl-disconnect', disabled: busy, onClick: disconnect }, h(Icon, { name: 'unlink', size: 12 }), '断开连接')),
         h('p', { className: 'xsl-description' }, '生成使用小算狸站内权益与积分。'),
         state?.expiresAt && h('p', { className: 'xsl-description' }, '授权有效期至 ' + new Date(state.expiresAt).toLocaleDateString()),
         loginForm);
