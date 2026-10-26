@@ -100,3 +100,25 @@ test('a failed authorization request closes only its preopened Web tab', async (
   assert.equal(closed, 1);
   assert.ok(text(ui.render()).includes('connection unavailable'));
 });
+
+test('copy uses the current authorization without creating another login attempt', async () => {
+  const copied = [];
+  const ui = await account({ clipboard: { async writeText(value) { copied.push(value); } } });
+  await ui.button('登录并连接小算狸').props.onClick();
+  await ui.button('复制授权链接').props.onClick();
+  assert.deepEqual(copied, [login.url]);
+  assert.ok(text(ui.render()).includes('授权链接已复制'));
+  assert.equal(ui.calls.filter(call => call.method.endsWith('/begin-login')).length, 1);
+  let selected = false;
+  const field = find(ui.render(), node => node.type === 'input' && node.props.value === login.url);
+  field.props.onFocus({ target: { select() { selected = true; } } });
+  assert.equal(selected, true);
+});
+
+test('Web popup blocking retains the link and code entry instead of failing authorization', async () => {
+  const ui = await account({ desktop: false, open: () => null });
+  await ui.button('登录并连接小算狸').props.onClick();
+  assert.ok(text(ui.render()).includes('浏览器可能阻止了新窗口'));
+  assert.ok(find(ui.render(), node => node.type === 'input' && node.props.value === login.url));
+  assert.ok(find(ui.render(), node => node.type === 'input' && node.props.placeholder === '粘贴一次性授权码'));
+});
