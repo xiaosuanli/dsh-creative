@@ -29,17 +29,28 @@ Conversational AI video creation for DeepSeek Harness: turn stories and novel ch
 
 先准备好：
 
-- 已安装并可正常使用的 DeepSeek Harness，目前支持版本为 `0.2.1-rc.2`。
+- 已安装并可正常使用的 DeepSeek Harness，最低版本为 `0.2.1-rc.2`（`engines.dsh: >=0.2.1-rc.2`）。
 - 一个[小算狸账号](https://www.xiaosuanli.com)，以及生成所需的积分或权益。
 
-在终端执行：
+**Web 版**：在系统终端执行：
 
 ```sh
-dsh plugin --profile web add @xiaosuanli/dsh-plugin@1.0.1
+dsh plugin --profile web add @xiaosuanli/dsh-plugin@1.0.2
 dsh web
 ```
 
-如果 DSH 已在运行，安装后请重启。上面的命令使用 `web` profile；使用其他 profile 时，请替换为你实际使用的名称。
+如果 Web 版 DSH 已在运行，安装后请重启对应 profile。
+
+**Desktop 版**：优先使用应用左侧的“插件”页面安装 `@xiaosuanli/dsh-plugin@1.0.2`。使用命令行时，先启动过 Desktop 完成初始化，再从应用菜单或托盘完全退出；随后使用 Desktop 自带的 `dsh` 安装到 `desktop` profile。Windows 默认安装位置对应的系统 PowerShell 命令为：
+
+```powershell
+$dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
+& $dsh plugin --profile desktop add @xiaosuanli/dsh-plugin@1.0.2
+```
+
+自定义安装目录时替换上面的路径。安装完成后重新打开 Desktop。Desktop 的插件安装使用其自带 CLI，不能用 npm 安装的另一套 `dsh` 管理 `desktop` profile。[官方 Desktop 安装说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#bundled-command-runtime)。
+
+若聊天中的命令工具连简单命令也报 `0xC0000142`，停止反复重试，改用插件页面或系统终端完成安装；该错误属于宿主命令启动问题，插件安装不会修复宿主沙箱。
 
 ## 第一次使用
 
