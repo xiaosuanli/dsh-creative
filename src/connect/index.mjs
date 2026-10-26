@@ -13,6 +13,7 @@ export class DirectorConnect {
   #api;
   #site;
   #revision = 0;
+  #loginExchange = false;
   #opening = new Map();
 
   constructor({ client, apiOrigin, siteOrigin, store, fetcher = fetch }) {
@@ -40,23 +41,55 @@ export class DirectorConnect {
     return result;
   }
 
-  async completeLogin({ code, state }) {
+  async completeLogin(input) {
+    if (this.#loginExchange) throw new ConnectError('LOGIN_IN_PROGRESS', '授权正在兑换，请等待本次结果，不要重复提交');
+    this.#loginExchange = true;
+    try { return await this.#completeLogin(input); }
+    finally { this.#loginExchange = false; }
+  }
+
+  async #completeLogin({ code, state }) {
     const pending = this.#pending ?? await this.#store.get(this.#key + '-pending-login');
     if (!this.#pending && pending) this.#revision = pending.revision;
     if (!pending || pending.state !== state || pending.expiresAt <= Date.now() || typeof code !== 'string' || !code.trim()) {
       throw new ConnectError('INVALID_LOGIN', '登录已过期或不匹配，请重新发起授权');
     }
-    this.#pending = undefined;
-    await this.#store.delete(this.#key + '-pending-login');
-    const grant = await request(this.#fetch, this.#api, '/api/subscriber/authorizations/token', {
-      method: 'POST', body: { clientId: this.#client.id, code: code.trim(), codeVerifier: pending.verifier },
-    });
+    this.#pending = pending;
+    let grant;
+    try {
+      grant = await request(this.#fetch, this.#api, '/api/subscriber/authorizations/token', {
+        method: 'POST', body: { clientId: this.#client.id, code: code.trim(), codeVerifier: pending.verifier },
+      });
+    } catch (error) {
+      if (pending.revision !== this.#revision) throw new ConnectError('LOGIN_CANCELLED', '登录已取消，请重新连接');
+      if (['RESULT_UNKNOWN', 'INVALID_RESPONSE'].includes(error.code)) {
+        pending.exchangeInterrupted = true;
+        const persisted = await this.#store.get(this.#key + '-pending-login');
+        if (persisted?.state === pending.state && pending.revision === this.#revision) {
+          await this.#store.set(this.#key + '-pending-login', pending);
+        }
+        throw new ConnectError(error.code, '授权兑换中断，结果尚未确认；请先查询登录状态。未连接时可手动重试本次授权；若授权码已使用或过期，请重新发起授权。');
+      }
+      await this.#clearPendingLogin(pending);
+      throw error;
+    }
     if (pending.revision !== this.#revision) throw new ConnectError('LOGIN_CANCELLED', '登录已取消，请重新连接');
-    this.#validateGrant(grant);
+    try { this.#validateGrant(grant); }
+    catch (error) { await this.#clearPendingLogin(pending); throw error; }
     const key = this.#key + '-' + (grant.projectId || 'account-' + grant.authorizationId);
     await this.#store.set(key, { ...grant, apiOrigin: this.#api, siteOrigin: this.#site });
     await this.#store.set(this.#key, { key });
+    await this.#clearPendingLogin(pending);
     return this.status();
+  }
+
+  async #clearPendingLogin(pending) {
+    if (pending.revision !== this.#revision || this.#pending?.state !== pending.state) return;
+    this.#pending = undefined;
+    const persisted = await this.#store.get(this.#key + '-pending-login');
+    if (persisted?.state === pending.state && pending.revision === this.#revision) {
+      await this.#store.delete(this.#key + '-pending-login');
+    }
   }
 
   #validateGrant(grant) {
@@ -88,6 +121,17 @@ export class DirectorConnect {
         projectId: grant.projectId, scopes: grant.scopes, expiresAt: grant.expiresAt };
     } catch (error) {
       if (!(error instanceof ConnectError)) throw error;
+      if (error.code === 'LOGIN_REQUIRED') {
+        const pending = this.#pending ?? await this.#store.get(this.#key + '-pending-login');
+        if (pending?.expiresAt > Date.now()) {
+          return { connected: false, clientId: this.#client.id, channel: this.#client.channel,
+            reason: pending.exchangeInterrupted ? 'LOGIN_EXCHANGE_INTERRUPTED' : 'LOGIN_PENDING',
+            state: pending.state, expiresAt: new Date(pending.expiresAt).toISOString(),
+            message: pending.exchangeInterrupted
+              ? '授权兑换结果未确认，可手动重试本次授权；若授权码已使用或过期，请重新发起授权。'
+              : '授权尚未完成，请在网页确认后提交本次授权码。' };
+        }
+      }
       return { connected: false, clientId: this.#client.id, channel: this.#client.channel, reason: error.code };
     }
   }

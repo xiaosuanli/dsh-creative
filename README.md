@@ -32,16 +32,27 @@ Conversational AI video creation for DeepSeek Harness: turn stories and novel ch
 - 已安装并可正常使用的 DeepSeek Harness，最低版本为 `0.2.1-rc.2`（`engines.dsh: >=0.2.1-rc.2`）。
 - 一个[小算狸账号](https://www.xiaosuanli.com)，以及生成所需的积分或权益。
 
-**Web 版**：在系统终端执行：
+Desktop 和 Web 使用**同一个插件包**，但安装到不同的 profile。请按实际使用方式选择；两种都用时，需要分别安装，安装在 Web 中的插件不会自动出现在 Desktop。
+
+| 使用方式 | 安装 profile | 使用的命令行 |
+| --- | --- | --- |
+| Desktop 桌面应用 | `desktop` | Desktop 应用自带的 `dsh` |
+| Web 浏览器界面 | `web` | 启动 Web 服务的那套 `dsh` |
+
+### Web 版
+
+先停止正在运行的 Web 服务，再在系统终端执行：
 
 ```sh
 dsh plugin --profile web add @xiaosuanli/dsh-plugin@1.0.2
 dsh web
 ```
 
-如果 Web 版 DSH 已在运行，安装后请重启对应 profile。
+安装后启动 Web 服务，浏览器刷新页面即可。
 
-**Desktop 版**：优先使用应用左侧的“插件”页面安装 `@xiaosuanli/dsh-plugin@1.0.2`。使用命令行时，先启动过 Desktop 完成初始化，再从应用菜单或托盘完全退出；随后使用 Desktop 自带的 `dsh` 安装到 `desktop` profile。Windows 默认安装位置对应的系统 PowerShell 命令为：
+### Desktop 版（Windows）
+
+优先使用应用左侧的“插件”页面安装 `@xiaosuanli/dsh-plugin@1.0.2`。使用命令行时，先启动过 Desktop 完成初始化，再从应用菜单或托盘完全退出；随后使用 Desktop 自带的 `dsh` 安装到 `desktop` profile。Windows 默认安装位置对应的系统 PowerShell 命令为：
 
 ```powershell
 $dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
@@ -52,10 +63,28 @@ $dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\ds
 
 若聊天中的命令工具连简单命令也报 `0xC0000142`，停止反复重试，改用插件页面或系统终端完成安装；该错误属于宿主命令启动问题，插件安装不会修复宿主沙箱。
 
+## 更新与卸载
+
+设置 → 小算狸 → 插件管理中可以查看版本、检查更新和卸载。安装更新后完全退出并重新打开 DSH；Web 版重启对应服务。如果尚无此入口，重新执行上面对应 profile 的安装命令即可升级到 1.0.2。
+
+卸载会要求确认。DSH 若拒绝卸载正在运行的插件，请先完全退出应用或停止 Web 服务，再在系统终端执行：
+
+```powershell
+# Windows Desktop：使用上面定义的 $dsh
+& $dsh plugin --profile desktop remove @xiaosuanli/dsh-plugin
+```
+
+```sh
+# Web
+dsh plugin --profile web remove @xiaosuanli/dsh-plugin
+```
+
+卸载不删除小算狸云端工程和素材。测试包切换到正式 npm 包后，请重新连接正式站账号。
+
 ## 第一次使用
 
 1. **连接账号**：点击 DSH 右下角的“小算狸”悬浮按钮，再点击“登录并连接小算狸”。插件会尝试打开授权页面；若浏览器未打开，点击“打开小算狸登录与授权页面”重试，或使用“复制授权链接”到系统浏览器打开。剪贴板不可用时可直接选中链接输入框手动复制。在浏览器登录并完成授权，将一次性授权码填回插件面板。
-2. **打开创作章节**：选择工程和章节，然后点击新建聊天。也可以直接在聊天中让 DSH 帮你选择并打开。
+2. **打开创作章节**：选择工程和章节，然后点击新建聊天；会话会命名为「工程名 · 章节名」。也可以直接在聊天中让 DSH 帮你选择并打开。
 3. **说出你的要求**：告诉 DSH 故事内容、画风、目标时长、画幅和对白语言；有参考图片或视频时，也可以一并提供。
    在已打开章节的聊天中输入 `@`，可按名称选择本章人物、物品、场景、文档、视频节点和幕节点。引用与 DSH 原有文件、会话候选并存；只选择引用不会修改内容或开始生成。
 4. **边聊边调整**：查看分镜和生成结果，提出修改要求；需要完整视频时，明确让 DSH 继续制作并导出成片。
