@@ -66,6 +66,12 @@ test('client registers a floating launcher and settings; binds a chapter before 
     workspaces: { list: { getSnapshot: () => ({ items: [{ workspaceId: 'workspace-a', sessionIds: ['current-conversation'] }] }) } },
     sessions: {
       list: { getSnapshot: () => ({ byId: { 'current-conversation': { cwd: '/example/project' } } }) },
+      using: async (id, options, fn) => {
+        assert.equal(id, 'new-conversation');
+        return fn({ binding: { session: { rename: async title => {
+          assert.equal(title, '我的电影 · 第 2 章'); order.push('rename'); return { ok: true, value: { title } };
+        } } } });
+      },
       create: async options => { assert.deepEqual(JSON.parse(JSON.stringify(options)), { workspaceId: 'workspace-a' }); order.push('create'); return 'new-conversation'; },
     },
     uiWorkspace: { openSession: id => order.push('open:' + id) },
@@ -79,7 +85,13 @@ test('client registers a floating launcher and settings; binds a chapter before 
   assert.equal(slots.get('settings.section').id, 'xiaosuanli');
   assert.equal(slots.has('sidebar.right.pane.tab'), false);
   const panel = slots.get('shell.overlay').inject();
-  await panel.createChat('project-a', 'chapter-a');
+  await panel.createChat('project-a', 'chapter-a', '我的电影', '第 2 章');
+  assert.deepEqual(order, ['create', 'xiaosuanli/open-chapter', 'rename', 'open:new-conversation']);
+  order.length = 0;
+  ctx.sessions.using = async () => ({ ok: false, error: { message: 'offline' } });
+  const partial = await panel.createChat('project-a', 'chapter-a', '我的电影', '第 2 章');
+  assert.equal(partial.namingFailed, true);
+  assert.match(partial.notice, /手动重命名/);
   assert.deepEqual(order, ['create', 'xiaosuanli/open-chapter', 'open:new-conversation']);
   order.length = 0;
   ctx.connection.rpc.call = async () => ({ ok: false, error: { message: 'chapter unavailable' } });

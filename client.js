@@ -73,6 +73,14 @@ window.__ModuleLoader__.load({
       .xsl-onboarding ol { margin: 10px 0 0; padding-left: 19px; color: var(--xsl-muted); }
       .xsl-onboarding li + li { margin-top: 8px; }
       .xsl-onboarding q { display: block; margin-top: 4px; color: var(--xsl-text); user-select: text; }
+      .xsl-management { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--xsl-line); }
+      .xsl-management h3 { font-size: 15px; margin-bottom: 8px; }
+      .xsl-management-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+      .xsl-management-actions button { border: 1px solid var(--xsl-line); border-radius: 8px; background: transparent; color: var(--xsl-text); padding: 7px 12px; }
+      .xsl-management-actions button:hover:not(:disabled) { background: var(--xsl-surface); }
+      .xsl-management-actions .xsl-danger { color: var(--dsw-alias-color-error, #c54848); }
+      .xsl-uninstall-confirm { padding: 14px; border: 1px solid var(--xsl-line); border-radius: 10px; }
+      .xsl-management-command { width: 100%; margin-top: 10px; padding: 9px; color: var(--xsl-text); background: var(--xsl-surface); border: 1px solid var(--xsl-line); border-radius: 8px; }
       .xsl-account-page { padding: 24px; max-width: 560px; }
       .xsl-account-heading { font-size: 18px; font-weight: 600; margin-bottom: 6px !important; }
       .xsl-description { font-size: 12px; color: var(--xsl-muted); line-height: 1.8; }
@@ -152,6 +160,53 @@ window.__ModuleLoader__.load({
     const hostBrowserNotice = browser => browser.requested
       ? '已请求系统默认浏览器打开授权页面；若未打开，请复制授权链接。'
       : '系统浏览器未能启动，请复制授权链接到浏览器继续。';
+    function PluginManagement({ rpc }) {
+      const [state, setState] = React.useState(null);
+      const [busy, setBusy] = React.useState(false);
+      const [error, setError] = React.useState('');
+      const [notice, setNotice] = React.useState('');
+      const [confirm, setConfirm] = React.useState(false);
+      const [restart, setRestart] = React.useState(false);
+      React.useEffect(() => {
+        let active = true;
+        rpc('plugin-status').then(value => { if (active) setState(value); }).catch(e => { if (active) setError(e.message); });
+        return () => { active = false; };
+      }, [rpc]);
+      const run = (action, payload) => async () => {
+        setBusy(true); setError(''); setNotice('');
+        try {
+          const result = await rpc(action, payload);
+          if (action === 'plugin-check-update') setState(result);
+          else { setConfirm(false); if (result.changed) setRestart(true); }
+          if (['failed', 'cancelled', 'overridden'].includes(result.application)) setError(result.message);
+          else setNotice(result.message);
+        } catch (e) {
+          setError(action === 'plugin-check-update' ? e.message : '未收到操作完成结果，请在 DSH 插件管理中确认状态，必要时重启 DSH。');
+        } finally { setBusy(false); }
+      };
+      const disabled = busy || !state?.available || restart || state?.restartRequired;
+      return h('section', { className: 'xsl-management', 'aria-label': '插件管理' },
+        h('h3', null, '插件管理'),
+        state && h('p', { className: 'xsl-description' }, '当前版本 ' + state.version +
+          (state.revision ? ' · ' + state.revision : '') + ' · ' + ({ test: '测试版', production: '正式版', npm: 'npm' }[state.channel] || state.channel)),
+        state && !state.available && h('p', { className: 'xsl-description' }, '当前环境未提供插件管理。'),
+        (restart || state?.restartRequired) && message('插件已变更，请完全退出并重新打开 DSH。', 'notice'),
+        message(error), message(notice, 'notice'),
+        h('div', { className: 'xsl-management-actions' },
+          h('button', { type: 'button', disabled, onClick: run('plugin-check-update') }, busy ? '正在处理…' : '检查更新'),
+          state?.updateAvailable && h('button', { type: 'button', disabled, onClick: run('plugin-update', { candidateId: state.candidateId }) },
+            '更新到 ' + state.latestVersion + (state.latestRevision ? ' · ' + state.latestRevision : '')),
+          h('button', { type: 'button', className: 'xsl-danger', disabled: disabled || !state?.removable, onClick: () => setConfirm(true) }, '卸载插件')),
+        confirm && h('div', { className: 'xsl-uninstall-confirm', role: 'group', 'aria-label': '确认卸载' },
+          h('p', null, '确定卸载小算狸插件？卸载后将无法在 DSH 使用导演台，云端工程和素材会保留。'),
+          h('div', { className: 'xsl-management-actions' },
+            h('button', { type: 'button', disabled: busy, onClick: () => setConfirm(false) }, '取消'),
+            h('button', { type: 'button', className: 'xsl-danger', disabled: busy, onClick: run('plugin-uninstall', { confirmed: true }) }, '确认卸载'))),
+        error && state?.uninstallCommand && h('div', null,
+          h('p', { className: 'xsl-description' }, '如需手动卸载，请先退出 DSH，再在系统终端执行：'),
+          h('input', { className: 'xsl-management-command', 'aria-label': '卸载命令', readOnly: true, value: state.uninstallCommand, onFocus: event => event.target.select() })),
+        busy && h('p', { className: 'xsl-loading', role: 'status' }, '正在处理插件操作，请稍候…'));
+    }
     function AccountSection({ rpc, compact = false, onConnectionChange }) {
       const [state, setState] = React.useState(null);
       const [account, setAccount] = React.useState(null);
@@ -261,6 +316,7 @@ window.__ModuleLoader__.load({
             h('div', { className: 'xsl-connect-title' }, h(Icon, { name: 'link', size: 18 }), '连接你的创作空间'),
             h('p', { className: 'xsl-description' }, '连接小算狸账号，开始创作剧情、编辑分镜，让故事走向银幕。'),
             primary('登录并连接小算狸', { disabled: busy, onClick: begin }, 'link'), loginForm),
+        !compact && h(PluginManagement, { rpc }),
         (busy || !state) && h('p', { className: 'xsl-loading', role: 'status' }, h(Icon, { name: 'refresh', className: 'xsl-spin', size: 12 }), busy ? '正在处理…' : '正在读取连接状态…'));
     }
     function SelectField({ label, count, icon, value, disabled, onChange, options, placeholder }) {
@@ -364,7 +420,7 @@ window.__ModuleLoader__.load({
             field('打开工程', projects.length ? projects.length + ' 个工程' : '', 'folder', { value: projectId, disabled: busy || !connected, onChange: chooseProject }, projects, '选择一个工程'),
             field('选择章节', chapters.length ? chapters.length + ' 个章节' : '', 'film', { value: chapterId, disabled: busy || !projectId, onChange: e => setChapterId(e.target.value) }, chapters, busy ? '正在读取章节…' : projectId ? '选择要创作的章节' : '请先选择工程'),
             primary('为此章节新建聊天', { disabled: busy || !projectId || !chapterId,
-              onClick: run(async () => { const result = await createChat(projectId, chapterId); setNotice(result.notice || '已打开新的章节对话。'); }) }, 'chat')),
+              onClick: run(async () => { const result = await createChat(projectId, chapterId, projects.find(item => item.id === projectId)?.title, chapters.find(item => item.id === chapterId)?.title); setNotice(result.notice || '已打开新的章节对话。'); }) }, 'chat')),
           h('p', { className: 'xsl-hint' }, h(Icon, { name: 'info', size: 12 }), '每个聊天专注一章。随时回到原来的对话，接着创作。'),
           message(notice, 'notice'),
           connected && h('details', { className: 'xsl-onboarding', open: projectsLoaded && !busy && (!projects.length || !!projectId && !chapters.length) ? true : undefined },
@@ -394,7 +450,7 @@ window.__ModuleLoader__.load({
       return h('div', { className: 'xsl-dir xsl-floating', ref: root },
         visited && h('div', { className: 'xsl-popover', id: panelId, ref: panel, role: 'dialog',
           'aria-label': '小算狸工程面板', hidden: !open, tabIndex: -1 },
-        h(ProjectPanel, { rpc, closePanel, createChat: async (...args) => { const result = await createChat(...args); setOpen(false); return result; } })),
+        h(ProjectPanel, { rpc, closePanel, createChat: async (...args) => { const result = await createChat(...args); if (!result.namingFailed) setOpen(false); return result; } })),
         h('button', { className: 'xsl-launcher', ref: launcher, 'aria-label': '小算狸工程',
           'aria-expanded': open, 'aria-controls': visited ? panelId : undefined, 'aria-haspopup': 'dialog',
           onClick: () => { setVisited(true); setOpen(value => !value); } }, h('img', { src: brandLogo, width: 27, height: 30, alt: '' }), '小算狸'));
@@ -445,14 +501,25 @@ window.__ModuleLoader__.load({
       }));
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: '@xiaosuanli/dsh-plugin/launcher',
         inject: () => ({ rpc,
-          createChat: async (projectId, chapterId) => {
+          createChat: async (projectId, chapterId, projectTitle, chapterTitle) => {
             const currentSession = ctx.sidebarRight.mounted.getSnapshot();
             const workspace = ctx.workspaces.list.getSnapshot().items.find(item => item.sessionIds.includes(currentSession));
             const cwd = currentSession && ctx.sessions.list.getSnapshot().byId[currentSession]?.cwd;
             const conversationId = await ctx.sessions.create(workspace ? { workspaceId: workspace.workspaceId } : cwd ? { cwd } : undefined);
             const result = await rpc('open-chapter', { conversationId, projectId, chapterId });
+            const title = [projectTitle || '未命名工程', chapterTitle || '未命名章节']
+              .map(value => String(value).replace(/\s+/g, ' ').trim()).join(' · ');
+            let notice = result.notice;
+            try {
+              const renamed = await ctx.sessions.using(conversationId, { source: 'xiaosuanli-chapter-title' },
+                reference => reference.binding.session.rename(title));
+              if (!renamed.ok) throw new Error(renamed.error.message);
+            } catch {
+              notice = '章节已连接，但对话命名未成功；可在左侧手动重命名。';
+            }
             ctx.uiWorkspace.openSession(conversationId);
-            return result;
+            return { ...result, notice, namingFailed: notice !== result.notice };
+
           },
         }) }, FloatingDirector));
       ctx.slots.inject('settings.section' , () => ctx.slots.register({ name: 'settings.section', id: 'xiaosuanli',

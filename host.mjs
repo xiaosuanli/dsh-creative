@@ -3,10 +3,11 @@ import z from '@deepseek-ai/schemastery';
 import { credentialKey } from '@deepseek-ai/dsh-credentials';
 import { DirectorConnect, ConnectError } from './src/connect/index.mjs';
 import { chapterReferences } from './src/connect/references.mjs';
+import { pluginManagement } from './src/connect/management.mjs';
 import { openWindowsAuthorization } from './src/connect/browser.mjs';
 
 export const name = 'xiaosuanli-connect';
-export const inject = ['connection', 'credentials', 'tools', 'skills'];
+export const inject = { required: ['connection', 'credentials', 'tools', 'skills'], optional: ['pluginManager', 'profileContext'] };
 export const Config = z.object({
   siteOrigin: z.string().default('https://www.xiaosuanli.com'),
   apiOrigin: z.string().default('https://api.xiaosuanli.com'),
@@ -16,6 +17,9 @@ const output = { schema: {}, render: (_args, value) => [{ type: 'text', text: JS
 const empty = { type: 'object', properties: {}, additionalProperties: false };
 
 export async function apply(ctx, config) {
+  const management = pluginManagement({ manager: ctx.pluginManager,
+    metadata: JSON.parse(await readFile(new URL('./package.json', import.meta.url), 'utf8')),
+    siteOrigin: config.siteOrigin, profile: ctx.profileContext?.name });
   const key = id => credentialKey(name, id);
   const connect = new DirectorConnect({
     client: { id: 'xiaosuanli-dsh', channel: 'dsh' },
@@ -141,6 +145,10 @@ export async function apply(ctx, config) {
       if (endpoint === 'references') return { ok: true, value: await chapterReferences(connect, payload?.conversationId, payload?.query, signal) };
       const value = await enqueue(async () => {
         switch (endpoint) {
+          case 'plugin-status': return management.status();
+          case 'plugin-check-update': return management.check();
+          case 'plugin-update': return management.update(payload?.candidateId);
+          case 'plugin-uninstall': return management.remove(payload?.confirmed);
           case 'status': return connect.status();
           case 'account': return connect.account();
           case 'projects': return connect.projects();
@@ -176,7 +184,7 @@ export async function apply(ctx, config) {
     }
   };
   // Exact Connection Fetch routes are owner-only and share the Host's authenticated carrier.
-  for (const endpoint of ['status', 'account', 'projects', 'chapters', 'conversation', 'references', 'open-chapter', 'begin-login', 'open-login', 'complete-login', 'refresh', 'disconnect']) {
+  for (const endpoint of ['plugin-status', 'plugin-check-update', 'plugin-update', 'plugin-uninstall', 'status', 'account', 'projects', 'chapters', 'conversation', 'references', 'open-chapter', 'begin-login', 'open-login', 'complete-login', 'refresh', 'disconnect']) {
     ctx.connection.fetch.register({ path: '/api/xiaosuanli/' + endpoint, methods: ['POST'], requestBody: 'buffered',
       async fetch(request) {
         let message;
