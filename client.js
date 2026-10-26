@@ -44,13 +44,23 @@ window.__ModuleLoader__.load({
       .xsl-field { display: grid; gap: 7px; min-width: 0; }
       .xsl-label { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; font-weight: 500; }
       .xsl-count { color: var(--xsl-muted); font-weight: 400; font-size: 11px; }
-      .xsl-select { position: relative; display: flex; align-items: center; min-width: 0; }
-      .xsl-select > .xsl-field-icon { position: absolute; left: 12px; color: var(--xsl-muted); pointer-events: none; }
-      .xsl-select > .xsl-chevron { position: absolute; right: 11px; color: var(--xsl-muted); pointer-events: none; }
-      .xsl-select select, .xsl-code { appearance: none; width: 100%; min-width: 0; color: var(--xsl-text); background: var(--dsw-alias-bg-base, transparent); border: 1px solid var(--xsl-line); border-radius: 9px; padding: 10px 32px 10px 35px; height: 42px; text-overflow: ellipsis; transition: border-color .15s; }
-      .xsl-select select:hover:not(:disabled), .xsl-code:hover:not(:disabled) { border-color: var(--xsl-muted); }
-      .xsl-select select:disabled { opacity: .4; }
-      .xsl-select option { color: var(--xsl-text); background: var(--dsw-alias-bg-base, #202020); }
+      .xsl-choice { display: grid; gap: 5px; min-width: 0; }
+      .xsl-choice-trigger, .xsl-code { width: 100%; min-width: 0; color: var(--xsl-text); background: var(--dsw-alias-bg-base, transparent); border: 1px solid var(--xsl-line); border-radius: 10px; height: 42px; transition: border-color .15s, background .15s; }
+      .xsl-choice-trigger { display: flex; align-items: center; gap: 10px; padding: 0 12px; text-align: left; }
+      .xsl-choice-trigger:hover:not(:disabled), .xsl-code:hover:not(:disabled) { border-color: var(--xsl-muted); }
+      .xsl-choice-trigger[aria-expanded=true] { border-color: #729bb5; box-shadow: 0 0 0 2px #729bb514; }
+      .xsl-choice-trigger:disabled { opacity: .4; cursor: not-allowed; }
+      .xsl-choice-trigger svg { color: var(--xsl-muted); }
+      .xsl-choice-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .xsl-choice-title[data-placeholder=true] { color: var(--xsl-muted); }
+      .xsl-choice-trigger .xsl-chevron { transition: transform .15s; }
+      .xsl-choice-trigger[aria-expanded=true] .xsl-chevron { transform: rotate(180deg); }
+      .xsl-choice-menu { display: grid; gap: 3px; max-height: min(220px, 35dvh); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 5px; border: 1px solid var(--xsl-line); border-radius: 11px; background: var(--dsw-alias-bg-base, #202020); box-shadow: 0 4px 16px #284b6412; }
+      .xsl-choice-option { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; border: 0; border-radius: 7px; padding: 8px 10px; background: transparent; color: var(--xsl-text); text-align: left; line-height: 1.5; }
+      .xsl-choice-option > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+      .xsl-choice-option:hover, .xsl-choice-option[data-active=true] { background: var(--xsl-surface); }
+      .xsl-choice-option[aria-selected=true] { background: color-mix(in srgb, #6b9fbe 14%, var(--dsw-alias-bg-base, #202020)); }
+      .xsl-choice-option[aria-selected=true] svg { color: #6b9fbe; }
       .xsl-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 42px; padding: 10px 14px; background: var(--xsl-accent); color: var(--dsw-alias-label-primary-foreground, #fff); border: 0; border-radius: 9px; font-weight: 500; transition: filter .15s, transform .15s; }
       .xsl-primary:hover:not(:disabled) { filter: brightness(1.1); }
       .xsl-primary:active:not(:disabled) { transform: translateY(1px); }
@@ -239,6 +249,60 @@ window.__ModuleLoader__.load({
             primary('登录并连接小算狸', { disabled: busy, onClick: begin }, 'link'), loginForm),
         (busy || !state) && h('p', { className: 'xsl-loading', role: 'status' }, h(Icon, { name: 'refresh', className: 'xsl-spin', size: 12 }), busy ? '正在处理…' : '正在读取连接状态…'));
     }
+    function SelectField({ label, count, icon, value, disabled, onChange, options, placeholder }) {
+      const [open, setOpen] = React.useState(false);
+      const [active, setActive] = React.useState(0);
+      const root = React.useRef(null), trigger = React.useRef(null);
+      const id = React.useId();
+      const items = [{ id: '', title: placeholder }, ...options];
+      const selected = Math.max(0, items.findIndex(item => item.id === value));
+      const expanded = open && !disabled;
+      const show = () => { if (!disabled) { setActive(selected); setOpen(true); } };
+      const choose = index => {
+        if (disabled || !items[index]) return;
+        setOpen(false); trigger.current?.focus();
+        if (items[index].id !== value) onChange({ target: { value: items[index].id } });
+      };
+      React.useEffect(() => {
+        if (!expanded) return;
+        const outside = event => { if (!root.current?.contains(event.target)) setOpen(false); };
+        document.addEventListener('pointerdown', outside);
+        return () => document.removeEventListener('pointerdown', outside);
+      }, [expanded]);
+      React.useEffect(() => {
+        if (disabled) setOpen(false);
+      }, [disabled, value]);
+      React.useEffect(() => {
+        if (expanded) root.current?.querySelector('[data-active=true]')?.scrollIntoView({ block: 'nearest' });
+      }, [expanded, active]);
+      const keyDown = event => {
+        if (disabled) return;
+        if (event.key === 'Escape' && expanded) { event.preventDefault(); event.stopPropagation(); setOpen(false); return; }
+        if (event.key === 'Tab') { setOpen(false); return; }
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        if (event.key === 'Enter' || event.key === ' ') { if (expanded) choose(active); else show(); return; }
+        setOpen(true);
+        setActive(event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 :
+          expanded ? Math.min(items.length - 1, Math.max(0, active + (event.key === 'ArrowDown' ? 1 : -1))) : selected);
+      };
+      return h('div', { className: 'xsl-field', ref: root,
+        onBlur: event => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); } },
+        h('span', { id: id + '-label', className: 'xsl-label' }, label, h('span', { className: 'xsl-count' }, count)),
+        h('div', { className: 'xsl-choice' },
+          h('button', { ref: trigger, type: 'button', role: 'combobox', className: 'xsl-choice-trigger', disabled,
+            'aria-labelledby': id + '-label', 'aria-haspopup': 'listbox', 'aria-expanded': expanded,
+            'aria-controls': expanded ? id + '-list' : undefined, 'aria-activedescendant': expanded ? id + '-option-' + active : undefined,
+            onClick: () => expanded ? setOpen(false) : show(), onKeyDown: keyDown },
+            h(Icon, { name: icon, size: 15 }),
+            h('span', { className: 'xsl-choice-title', title: items[selected].title || items[selected].id, 'data-placeholder': !value }, items[selected].title || items[selected].id),
+            h(Icon, { name: 'chevron', className: 'xsl-chevron', size: 13 })),
+          expanded && h('div', { id: id + '-list', role: 'listbox', 'aria-labelledby': id + '-label', className: 'xsl-choice-menu' },
+            ...items.map((item, index) => h('button', { key: item.id, id: id + '-option-' + index, type: 'button', role: 'option',
+              className: 'xsl-choice-option', tabIndex: -1, 'aria-selected': item.id === value, 'data-active': index === active,
+              onMouseDown: event => event.preventDefault(), onMouseEnter: () => setActive(index), onClick: () => choose(index) },
+              h('span', null, item.title || item.id), item.id === value && h(Icon, { name: 'check', size: 14 }))))));
+    }
     function ProjectPanel({ rpc, createChat, closePanel }) {
       const [projects, setProjects] = React.useState([]);
       const [projectsLoaded, setProjectsLoaded] = React.useState(false);
@@ -270,12 +334,7 @@ window.__ModuleLoader__.load({
       };
       const step = (n, title, active, done) => h('div', { className: 'xsl-step', 'data-active': active, 'data-done': done },
         h('span', null, done ? h(Icon, { name: 'check', size: 11 }) : n), title);
-      const field = (label, count, icon, props, options, placeholder) => h('label', { className: 'xsl-field' },
-        h('span', { className: 'xsl-label' }, label, h('span', { className: 'xsl-count' }, count)),
-        h('span', { className: 'xsl-select' }, h(Icon, { name: icon, className: 'xsl-field-icon', size: 15 }),
-          h('select', { 'aria-label': label, ...props }, h('option', { value: '' }, placeholder),
-            ...options.map(p => h('option', { key: p.id, value: p.id }, p.title || p.id))),
-          h(Icon, { name: 'chevron', className: 'xsl-chevron', size: 13 })));
+      const field = (label, count, icon, props, options, placeholder) => h(SelectField, { label, count, icon, ...props, options, placeholder });
       return h('section', { className: 'xsl-dir xsl-panel', 'aria-label': '小算狸工程与章节' },
         h('div', { className: 'xsl-brand' }, h('div', { className: 'xsl-brandmark' }, h('img', { src: brandLogo, width: 30, height: 33, alt: '' })),
           h('div', null, h('h3', null, '小算狸导演台'), h('p', null, '让你的故事，走向银幕')),
