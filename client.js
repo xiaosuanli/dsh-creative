@@ -91,6 +91,8 @@ window.__ModuleLoader__.load({
       .xsl-login { display: grid; gap: 13px; padding: 15px; border: 1px solid var(--xsl-line); border-radius: 10px; margin-top: 14px; }
       .xsl-login a { display: inline-flex; align-items: center; gap: 7px; color: var(--xsl-accent); text-decoration: none; font-size: 12px; }
       .xsl-login a:hover { text-decoration: underline; }
+      .xsl-login-actions { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+      .xsl-login-url { width: 100%; min-width: 0; height: 36px; padding: 8px; font-size: 11px; user-select: text; }
       .xsl-code { height: 38px; padding: 8px 11px; }
       .xsl-message { display: flex; align-items: flex-start; gap: 7px; padding: 10px 12px; margin: 12px 0; border-radius: 8px; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; background: color-mix(in srgb, #d65c5c 8%, transparent); color: #d65c5c; }
       .xsl-message[data-kind=notice] { color: var(--xsl-muted); background: var(--xsl-surface); }
@@ -120,6 +122,23 @@ window.__ModuleLoader__.load({
     const accountName = value => /^1\d{10}$/.test(value || '') ? value.slice(0, 3) + '****' + value.slice(-4) : value || '小算狸账号';
     const message = (text, kind) => text && h('div', { className: 'xsl-message', role: kind === 'notice' ? 'status' : 'alert', 'data-kind': kind }, h(Icon, { name: 'info' }), text);
     const primary = (label, props, icon = 'arrow') => h('button', { className: 'xsl-primary', ...props }, h(Icon, { name: icon }), label);
+    const openAuthorizationPage = (url, popup) => {
+      try {
+        const destination = new URL(url);
+        if (!['https:', 'http:'].includes(destination.protocol) || destination.username || destination.password) throw new Error('Invalid authorization URL');
+        if (popup && !popup.closed) popup.location.replace(destination.href);
+        else {
+          const opened = window.open(destination.href, '_blank', 'noopener,noreferrer');
+          // Electron handles the HTTPS URL in its main process, denies the new
+          // in-app window and returns null even when the external open succeeds.
+          if (!opened && window.location?.protocol !== 'dsh-app:') return '浏览器可能阻止了新窗口，请点击打开或复制授权链接。';
+        }
+        return '已请求打开授权页面；若浏览器未打开，请复制授权链接到系统浏览器。';
+      } catch {
+        try { popup?.close(); } catch { /* the host may already have closed it */ }
+        return '未能打开浏览器，请复制授权链接到系统浏览器继续。';
+      }
+    };
     function AccountSection({ rpc, compact = false, onConnectionChange }) {
       const [state, setState] = React.useState(null);
       const [account, setAccount] = React.useState(null);
@@ -127,6 +146,7 @@ window.__ModuleLoader__.load({
       const [code, setCode] = React.useState('');
       const [busy, setBusy] = React.useState(false);
       const [error, setError] = React.useState('');
+      const [browserNotice, setBrowserNotice] = React.useState('');
       const refresh = async () => {
         setAccount(null);
         const status = await rpc('refresh');
@@ -147,7 +167,28 @@ window.__ModuleLoader__.load({
         try { await fn(); } catch (err) { setError(err.message); }
         finally { setBusy(false); }
       };
-      const begin = run(async () => { setLogin(await rpc('begin-login')); setCode(''); });
+      const begin = run(async () => {
+        setLogin(null); setCode(''); setBrowserNotice('');
+        let popup = null;
+        // Web needs the user gesture before the RPC; Desktop rejects blank
+        // windows, so send its final HTTPS URL directly after the RPC instead.
+        if (window.location?.protocol !== 'dsh-app:') {
+          try { popup = window.open('about:blank', '_blank'); if (popup) popup.opener = null; } catch { /* retain the copy-link route */ }
+        }
+        let attempt;
+        try { attempt = await rpc('begin-login'); }
+        catch (error) { try { popup?.close(); } catch {} throw error; }
+        setLogin(attempt);
+        setBrowserNotice(openAuthorizationPage(attempt.url, popup));
+      });
+      const copyLogin = async () => {
+        try {
+          await navigator.clipboard.writeText(login.url);
+          setBrowserNotice('授权链接已复制，请粘贴到系统浏览器完成授权。');
+        } catch {
+          setBrowserNotice('未能访问剪贴板，请选中下方授权链接手动复制到系统浏览器。');
+        }
+      };
       const finish = run(async () => {
         const entered = code; setCode('');
         await rpc('complete-login', { code: entered, state: login.state });
@@ -157,7 +198,13 @@ window.__ModuleLoader__.load({
         await rpc('disconnect'); setAccount(null); setLogin(null); setState({ connected: false }); setCode(''); onConnectionChange?.(false);
       });
       const loginForm = login && h('div', { className: 'xsl-login' },
-        h('a', { href: login.url, target: '_blank', rel: 'noopener noreferrer' }, h(Icon, { name: 'float', size: 14 }), '打开小算狸登录与授权页面'),
+        h('div', { className: 'xsl-login-actions' },
+          h('button', { type: 'button', className: 'xsl-text-button', disabled: busy,
+            onClick: () => setBrowserNotice(openAuthorizationPage(login.url)) }, h(Icon, { name: 'link', size: 14 }), '打开小算狸登录与授权页面'),
+          h('button', { type: 'button', className: 'xsl-text-button', disabled: busy, onClick: copyLogin }, '复制授权链接')),
+        message(browserNotice, 'notice'),
+        h('input', { className: 'xsl-login-url', 'aria-label': '授权链接', value: login.url, readOnly: true,
+          onFocus: event => event.target.select() }),
         h('p', { className: 'xsl-description' }, '在网页确认授权后，将一次性授权码粘贴到下方，完成连接。'),
         h('label', { className: 'xsl-field' }, h('span', { className: 'xsl-label' }, '一次性授权码'), h('input', {
           className: 'xsl-code', type: 'password', value: code, autoComplete: 'off', maxLength: 128,
