@@ -33,6 +33,7 @@ async function account({ desktop = true, open = () => null, begin = async () => 
   });
   module.factory(() => React).apply({
     effect(fn) { fn(); },
+    inputTriggers: { registerSource() { return () => {}; } },
     connection: { rpc: { async call(_channel, method, payload) {
       calls.push({ method, payload });
       return { ok: true, value: method.endsWith('/begin-login') ? await begin() : { connected: false } };

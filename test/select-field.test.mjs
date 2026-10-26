@@ -23,6 +23,7 @@ async function select() {
     document: { createElement: () => ({ remove() {} }), head: { appendChild() {} } },
   });
   module.factory(() => React).apply({ effect(fn) { fn(); }, connection: { rpc: { call() {} } },
+    inputTriggers: { registerSource() { return () => {}; } },
     slots: { inject(_name, fn) { fn(); }, register(options, view) { if (options.name === 'shell.overlay') floating = view; } } });
   const render = (component, props) => {
     current = component; cursor = 0;

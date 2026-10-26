@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import z from '@deepseek-ai/schemastery';
 import { credentialKey } from '@deepseek-ai/dsh-credentials';
 import { DirectorConnect, ConnectError } from './src/connect/index.mjs';
+import { chapterReferences } from './src/connect/references.mjs';
 
 export const name = 'xiaosuanli-connect';
 export const inject = ['connection', 'credentials', 'tools', 'skills'];
@@ -132,8 +133,10 @@ export async function apply(ctx, config) {
     serial = task.catch(() => {});
     return task;
   };
-  const dispatch = async (endpoint, payload) => {
+  const dispatch = async (endpoint, payload, signal) => {
     try {
+      // Candidate reads must not queue behind a login exchange or a write.
+      if (endpoint === 'references') return { ok: true, value: await chapterReferences(connect, payload?.conversationId, payload?.query, signal) };
       const value = await enqueue(async () => {
         switch (endpoint) {
           case 'status': return connect.status();
@@ -161,7 +164,7 @@ export async function apply(ctx, config) {
     }
   };
   // Exact Connection Fetch routes are owner-only and share the Host's authenticated carrier.
-  for (const endpoint of ['status', 'account', 'projects', 'chapters', 'conversation', 'open-chapter', 'begin-login', 'complete-login', 'refresh', 'disconnect']) {
+  for (const endpoint of ['status', 'account', 'projects', 'chapters', 'conversation', 'references', 'open-chapter', 'begin-login', 'complete-login', 'refresh', 'disconnect']) {
     ctx.connection.fetch.register({ path: '/api/xiaosuanli/' + endpoint, methods: ['POST'], requestBody: 'buffered',
       async fetch(request) {
         let message;
@@ -173,7 +176,7 @@ export async function apply(ctx, config) {
         if (message?.type !== 'client-request' || typeof message.rpcId !== 'string' || message.rpcId.length > 128 || message.method !== 'xiaosuanli/' + endpoint) {
           return new Response('invalid request envelope', { status: 400 });
         }
-        return Response.json({ type: 'server-response', rpcId: message.rpcId, result: await dispatch(endpoint, message.payload) });
+        return Response.json({ type: 'server-response', rpcId: message.rpcId, result: await dispatch(endpoint, message.payload, request.signal) });
       },
     });
   }

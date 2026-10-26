@@ -385,16 +385,50 @@ window.__ModuleLoader__.load({
           'aria-expanded': open, 'aria-controls': visited ? panelId : undefined, 'aria-haspopup': 'dialog',
           onClick: () => { setVisited(true); setOpen(value => !value); } }, h('img', { src: brandLogo, width: 27, height: 30, alt: '' }), '小算狸'));
     }
-    return { inject: ['slots', 'connection', 'sidebarRight', 'sessions', 'workspaces', 'uiWorkspace'], apply(ctx) {
+    const referenceValue = ref => {
+      const item = JSON.parse(ref);
+      if (!item || !['resource', 'video', 'act'].includes(item.kind) ||
+        !['projectId', 'chapterId', 'id', 'name'].every(key => typeof item[key] === 'string' && item[key])) throw new Error('章节引用无效，请重新选择');
+      return { projectId: item.projectId, chapterId: item.chapterId, kind: item.kind, id: item.id, name: item.name };
+    };
+    const referenceClipboard = ref => {
+      const item = referenceValue(ref);
+      return '@[' + item.name.replace(/[\[\]\r\n]/g, ' ') + '](xiaosuanli:' + encodeURIComponent(JSON.stringify(item)) + ')';
+    };
+    return { inject: ['slots', 'connection', 'sidebarRight', 'sessions', 'workspaces', 'uiWorkspace', 'inputTriggers'], apply(ctx) {
       ctx.effect(() => {
         const element = document.createElement('style'); element.textContent = styles; document.head.appendChild(element);
         return () => element.remove();
       });
-      const rpc = async (endpoint, payload = {}) => {
-        const result = await ctx.connection.rpc.call('/api', 'xiaosuanli/' + endpoint, payload);
+      const rpc = async (endpoint, payload = {}, signal) => {
+        const result = await ctx.connection.rpc.call('/api', 'xiaosuanli/' + endpoint, payload, signal);
         if (!result.ok) throw new Error(result.error.message);
         return result.value;
       };
+      ctx.effect(() => ctx.inputTriggers.registerSource({
+        trigger: '@', name: 'xiaosuanli', order: -10, showGroupTitle: false,
+        async candidates(session, { query, quoted, signal }) {
+          if (quoted || signal.aborted) return [];
+          try {
+            const result = await rpc('references', { conversationId: session.sessionId, query }, signal);
+            if (signal.aborted) return [];
+            return result.items.map(item => ({ name: item.name, label: item.name, section: '小算狸 · ' + item.section,
+              description: '本章' + item.section, icon: item.kind === 'act' ? 'folder' : 'file', value: JSON.stringify(item) }));
+          } catch (error) { if (signal.aborted) return []; throw error; }
+        },
+        onPick({ candidate, session }) {
+          const item = JSON.parse(candidate.value);
+          if (item.conversationId !== session.sessionId) return;
+          const ref = JSON.stringify(referenceValue(candidate.value));
+          return { insert: { source: 'xiaosuanli', ref, label: item.name, appearance: 'file', clipboardText: referenceClipboard(ref) } };
+        },
+        codec: {
+          clipboardText: referenceClipboard,
+          // IDs are locators, never authority or a snapshot of the resource.
+          // The director tools validate them against this chat's chapter grant.
+          serialize: async ref => '【小算狸章节引用】' + JSON.stringify(referenceValue(ref)),
+        },
+      }));
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: '@xiaosuanli/dsh-plugin/launcher',
         inject: () => ({ rpc,
           createChat: async (projectId, chapterId) => {

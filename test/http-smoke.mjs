@@ -30,10 +30,13 @@ assert.equal(new URL(login.body.result.value.url).searchParams.get('clientId'), 
 assert.equal('codeVerifier' in login.body.result.value, false);
 const account = await rpc('account');
 assert.equal(account.body.result.ok, false);
+const references = await rpc('references', { conversationId: 'unbound-smoke-chat', query: '' });
+assert.equal(references.body.result.ok, true);
+assert.deepEqual(references.body.result.value, { bound: false, items: [] });
 const html = await (await fetch(base, { headers: { Cookie: cookie } })).text();
 const summary = { activated: true, anonymousStatus: anonymous.status, ownerStatus: status.body.result.value,
   loginLinkClient: 'xiaosuanli-dsh', unconnectedAccountRejected: true,
   clientMentionedInBootstrap: html.includes('@xiaosuanli/dsh-plugin') || html.includes('%40xiaosuanli'),
-  remoteAccountUsed: false, chargedGeneration: false };
+  unboundReferencesEmpty: true, remoteAccountUsed: false, chargedGeneration: false };
 await writeFile(resultPath, JSON.stringify(summary, null, 2));
 console.log(JSON.stringify(summary));

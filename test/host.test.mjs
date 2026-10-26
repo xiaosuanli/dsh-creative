@@ -57,6 +57,7 @@ test('client registers a floating launcher and settings; binds a chapter before 
   const slots = new Map(), effects = [], order = [];
   const ctx = {
     slots: { inject(_name, fn) { fn(); }, register(options) { slots.set(options.name, options); } },
+    inputTriggers: { registerSource() { return () => {}; } },
     effect(fn) { effects.push(fn()); },
     sidebarRight: { mounted: { getSnapshot: () => 'current-conversation' } },
     workspaces: { list: { getSnapshot: () => ({ items: [{ workspaceId: 'workspace-a', sessionIds: ['current-conversation'] }] }) } },
