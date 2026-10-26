@@ -104,10 +104,14 @@ window.__ModuleLoader__.load({
       .xsl-dir .xsl-account-action { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 28px; padding: 4px 8px; border: 1px solid var(--xsl-line); border-radius: 6px; background: color-mix(in srgb, var(--xsl-text) 4%, var(--dsw-alias-bg-base, #202020)); color: var(--xsl-text); font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; transition: background .15s, border-color .15s, filter .15s; }
       .xsl-account-action:hover:not(:disabled) { background: var(--xsl-surface); border-color: var(--xsl-muted); }
       .xsl-account-action:active:not(:disabled) { filter: brightness(.92); }
-      .xsl-dir .xsl-account-action.xsl-reauthorize { background: var(--xsl-accent); border-color: var(--xsl-accent); color: var(--dsw-alias-label-primary-foreground, #fff); }
-      .xsl-dir .xsl-account-action.xsl-reauthorize:hover:not(:disabled) { filter: brightness(1.12); }
+      .xsl-dir .xsl-account-action.xsl-reauthorize,
+      .xsl-dir .xsl-account-action.xsl-reauthorize:hover:not(:disabled),
+      .xsl-dir .xsl-account-action.xsl-reauthorize:active:not(:disabled) { background: var(--xsl-text); border-color: var(--xsl-text); color: var(--dsw-alias-bg-base, #202020); }
+      .xsl-dir .xsl-account-action.xsl-reauthorize:hover:not(:disabled) { filter: brightness(.92); }
+      .xsl-dir .xsl-account-action.xsl-reauthorize:active:not(:disabled) { filter: brightness(.85); }
       .xsl-dir .xsl-account-action.xsl-disconnect { margin-left: auto; color: #d65c5c; border-color: color-mix(in srgb, #d65c5c 55%, var(--xsl-line)); background: color-mix(in srgb, #d65c5c 5%, var(--dsw-alias-bg-base, #202020)); }
       .xsl-dir .xsl-account-action.xsl-disconnect:hover:not(:disabled) { background: color-mix(in srgb, #d65c5c 12%, var(--dsw-alias-bg-base, #202020)); border-color: #d65c5c; }
+      .xsl-dir .xsl-account-action:disabled { opacity: 1; color: var(--xsl-muted); background: var(--xsl-surface); border-color: var(--xsl-line); filter: none; }
       .xsl-text-button { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; background: transparent; border: 0; padding: 3px 0; color: var(--xsl-muted); }
       .xsl-text-button:hover:not(:disabled) { color: var(--xsl-text); }
       .xsl-connect-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--xsl-line); border-radius: 12px; }
