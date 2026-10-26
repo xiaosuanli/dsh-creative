@@ -100,10 +100,16 @@ window.__ModuleLoader__.load({
       .xsl-credit span { color: var(--xsl-muted); font-size: 11px; }
       .xsl-credit strong { font-size: 21px; line-height: 1.5; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
       .xsl-quota { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; color: var(--xsl-muted); font-size: 11px; }
-      .xsl-account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; }
+      .xsl-account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+      .xsl-account-action { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 8px 11px; border: 1px solid var(--xsl-line); border-radius: 8px; background: color-mix(in srgb, var(--xsl-text) 4%, var(--dsw-alias-bg-base, #202020)); color: var(--xsl-text); font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap; transition: background .15s, border-color .15s, filter .15s; }
+      .xsl-account-action:hover:not(:disabled) { background: var(--xsl-surface); border-color: var(--xsl-muted); }
+      .xsl-account-action:active:not(:disabled) { filter: brightness(.92); }
+      .xsl-account-action.xsl-reauthorize { background: var(--xsl-accent); border-color: var(--xsl-accent); color: var(--dsw-alias-label-primary-foreground, #fff); }
+      .xsl-account-action.xsl-reauthorize:hover:not(:disabled) { filter: brightness(1.12); }
+      .xsl-account-action.xsl-disconnect { margin-left: auto; color: #d65c5c; border-color: color-mix(in srgb, #d65c5c 55%, var(--xsl-line)); background: color-mix(in srgb, #d65c5c 5%, var(--dsw-alias-bg-base, #202020)); }
+      .xsl-account-action.xsl-disconnect:hover:not(:disabled) { background: color-mix(in srgb, #d65c5c 12%, var(--dsw-alias-bg-base, #202020)); border-color: #d65c5c; }
       .xsl-text-button { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; background: transparent; border: 0; padding: 3px 0; color: var(--xsl-muted); }
       .xsl-text-button:hover:not(:disabled) { color: var(--xsl-text); }
-      .xsl-text-button.xsl-disconnect:hover:not(:disabled) { color: #d65c5c; }
       .xsl-connect-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--xsl-line); border-radius: 12px; }
       .xsl-connect-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
       .xsl-login { display: grid; gap: 13px; padding: 15px; border: 1px solid var(--xsl-line); border-radius: 10px; margin-top: 14px; }
@@ -129,6 +135,7 @@ window.__ModuleLoader__.load({
       info: ['M12 8h.01M12 11v5', 'M22 12a10 10 0 11-20 0 10 10 0 0120 0'],
       user: ['M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2', 'M16 7a4 4 0 11-8 0 4 4 0 018 0'],
       link: ['M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-2 2M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l2-2'],
+      unlink: ['M18.8 10.5l1.2-1.2a4.6 4.6 0 00-6.5-6.5L12.3 4M5.2 13.5L4 14.7a4.6 4.6 0 006.5 6.5l1.2-1.2M8 12l4-4M12 16l4-4M3 3l18 18'],
       arrow: ['M5 12h14M14 7l5 5-5 5'],
     };
     function Icon({ name, size = 16, className = '' }) {
@@ -299,9 +306,9 @@ window.__ModuleLoader__.load({
           h('span', null, '视频已用 ' + format(account.credits?.video?.usedCredits) + ' / ' + format(account.credits?.video?.limitCredits)),
           account.membership && h('span', null, (account.membership.videoMaxResolution || '未包含视频权益') + ' · 并发 ' + format(account.membership.videoConcurrency))),
         h('div', { className: 'xsl-account-actions' },
-          h('button', { className: 'xsl-text-button', disabled: busy, onClick: run(refresh) }, h(Icon, { name: 'refresh', size: 12 }), '刷新额度'),
-          h('button', { className: 'xsl-text-button', disabled: busy, onClick: begin }, '重新授权'),
-          h('button', { className: 'xsl-text-button xsl-disconnect', disabled: busy, onClick: disconnect }, '断开连接')),
+          h('button', { type: 'button', className: 'xsl-account-action', disabled: busy, onClick: run(refresh) }, h(Icon, { name: 'refresh', size: 14 }), '刷新额度'),
+          h('button', { type: 'button', className: 'xsl-account-action xsl-reauthorize', disabled: busy, onClick: begin }, h(Icon, { name: 'link', size: 14 }), '重新授权'),
+          h('button', { type: 'button', className: 'xsl-account-action xsl-disconnect', disabled: busy, onClick: disconnect }, h(Icon, { name: 'unlink', size: 14 }), '断开连接')),
         h('p', { className: 'xsl-description' }, '生成使用小算狸站内权益与积分。'),
         state?.expiresAt && h('p', { className: 'xsl-description' }, '授权有效期至 ' + new Date(state.expiresAt).toLocaleDateString()),
         loginForm);
