@@ -7,7 +7,7 @@ import { pluginManagement } from './src/connect/management.mjs';
 import { openWindowsAuthorization } from './src/connect/browser.mjs';
 
 export const name = 'xiaosuanli-connect';
-export const inject = { required: ['connection', 'credentials', 'tools', 'skills'], optional: ['pluginManager', 'profileContext'] };
+export const inject = ['connection', 'credentials', 'tools', 'skills', 'pluginManager', 'profileContext'];
 export const Config = z.object({
   siteOrigin: z.string().default('https://www.xiaosuanli.com'),
   apiOrigin: z.string().default('https://api.xiaosuanli.com'),
