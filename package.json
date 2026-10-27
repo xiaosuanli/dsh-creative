@@ -1,6 +1,6 @@
 {
   "name": "@xiaosuanli/dsh-plugin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "description": "让用户在 DeepSeek Harness（DSH）中通过自然语言对话生成、修改并导出 AI 视频，支持故事/小说转视频与参考视频复刻。",
   "engines": {
