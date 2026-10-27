@@ -125,7 +125,10 @@ export async function apply(ctx, config) {
         delete parameters.properties.projectId;
         parameters.required = (parameters.required ?? []).filter(key => key !== 'projectId');
       }
-      registrations.push(ctx.tools.register({ name: 'xiaosuanli_' + tool.operation, description: tool.description, parameters, output,
+      const description = tool.operation === 'media_preview'
+        ? tool.description + ' 图片和视频的 artifacts[].url 是临时预览链接，可提供给用户；没有 URL 时不要把 objectRef 当链接。'
+        : tool.description;
+      registrations.push(ctx.tools.register({ name: 'xiaosuanli_' + tool.operation, description, parameters, output,
         async execute(args, exec) {
           const step = turn(exec);
           await claim(step);

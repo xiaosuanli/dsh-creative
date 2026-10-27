@@ -40,6 +40,7 @@ test('host registers isolated account UI RPC, installs tools after login and rem
     assert.equal(skills[0].name, 'xiaosuanli-director');
     assert.ok(tools.has('xiaosuanli_project_get'));
     for (const operation of ['library_list', 'library_manage', 'canvas_edit', 'media_edit', 'video_configure', 'media_preview', 'generation_list', 'queue_cancel', 'generation_cancel_node', 'import_steps', 'import_budget', 'import_retry_speech', 'canvas_history', 'canvas_restore', 'story_reparse', 'review_acknowledge']) assert.ok(tools.has('xiaosuanli_' + operation), operation);
+    assert.match(tools.get('xiaosuanli_media_preview').description, /artifacts\[\]\.url/);
     assert.equal(tools.has('xiaosuanli_shell'), false);
     assert.equal(tools.has('xiaosuanli_workspace_action'), false);
     assert.equal(tools.get('xiaosuanli_project_get').parameters.properties.projectId, undefined);

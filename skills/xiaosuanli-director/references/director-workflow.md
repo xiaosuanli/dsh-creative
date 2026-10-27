@@ -55,7 +55,7 @@
 
 `media_edit` 管理已有素材图、音色和首尾帧；`video_configure` 调整视频模式与参数。参数和可选动作以工具 Schema 为准，已有可用素材直接复用，不重复收费生成。`canvas_history` 查询版本，用户要求恢复时使用 `canvas_restore`；完成后刷新工程版本。
 
-`generation_list` 查询本章队列，`queue_cancel` 或 `generation_cancel_node` 取消对应任务；`import_steps`、`import_budget` 与 `import_retry_speech` 用于查看解析步骤、预算和重试原音，`review_acknowledge` 记录已复核项。`media_preview` 返回已有媒体信息，使用返回的可访问地址；取得链接不等于已经观看或下载。网页专属的选文件和适应画布按钮需在导演台网页操作。
+`generation_list` 查询本章队列，`queue_cancel` 或 `generation_cancel_node` 取消对应任务；`import_steps`、`import_budget` 与 `import_retry_speech` 用于查看解析步骤、预算和重试原音，`review_acknowledge` 记录已复核项。用户要求查看已有图片或视频时，调用 `media_preview`，将每项 `artifacts[].url` 作为可点击的预览链接提供给用户；图片也可用 Markdown 图片展示，视频使用链接供用户打开播放。链接可能过期，需要时重新调用获取；`objectRef` 不是可播放地址。若返回 `previewError` 或没有 URL，说明该媒体的链接暂不可用，不要编造链接；取得链接不等于已经观看或下载。网页专属的选文件和适应画布按钮需在导演台网页操作。
 
 ## 素材与人物一致性
 
