@@ -53,7 +53,7 @@ Start the Web service and refresh the browser.
 
 ### Desktop (Windows)
 
-The easiest option is to install `@xiaosuanli/dsh-plugin@1.0.4` from the **Plugins** page on the left side of the app. To use the command line, first start Desktop once to complete initialization, then quit it completely from the app menu or system tray. Install into the `desktop` profile using the `dsh` bundled with Desktop. For the default Windows installation path, run in system PowerShell:
+The easiest option is to install `@xiaosuanli/dsh-plugin@1.0.4` from the **Plugins (插件)** page on the left side of the app. To use the command line, first start Desktop once to complete initialization, then quit it completely from the app menu or system tray. Install into the `desktop` profile using the `dsh` bundled with Desktop. For the default Windows installation path, run in system PowerShell:
 
 ```powershell
 $dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
@@ -66,7 +66,7 @@ If the chat command tool reports `0xC0000142` even for simple commands, stop ret
 
 ## Update or uninstall
 
-Under **Settings → Xiaosuanli → Plugin Management**, you can view the version, check for updates, and uninstall. Version 1.0.4 fixes failed updates and inactive update buttons for installed plugins. If an update fails, select **Check for updates** to fetch a new candidate and try again. The buttons in versions 1.0.2 and 1.0.3 require a one-time upgrade first; use the installation command for your profile above, without uninstalling first. After updating, quit and reopen DSH completely; for Web, restart the service. If the management entry is unavailable, run the installation command for your profile again to update to 1.0.4.
+Under **Settings → Xiaosuanli → Plugin Management (设置 → 小算狸 → 插件管理)**, you can view the version, check for updates, and uninstall. Version 1.0.4 fixes failed updates and inactive update buttons for installed plugins. If an update fails, select **Check for updates (检查更新)** to fetch a new candidate and try again. The buttons in versions 1.0.2 and 1.0.3 require a one-time upgrade first; use the installation command for your profile above, without uninstalling first. After updating, quit and reopen DSH completely; for Web, restart the service. If the management entry is unavailable, run the installation command for your profile again to update to 1.0.4.
 
 Uninstalling requires confirmation. If DSH refuses to remove a running plugin, completely quit the app or stop the Web service first, then run in a system terminal:
 
@@ -84,7 +84,7 @@ Uninstalling does not delete your Xiaosuanli cloud projects or assets. When swit
 
 ## First use
 
-1. **Connect your account.** Click the Xiaosuanli floating button at the bottom right of DSH, then select **Log in and connect Xiaosuanli**. The plugin will try to open the authorization page. If it does not open, retry using **Open the Xiaosuanli login and authorization page**, or copy the authorization link into your browser. If the clipboard is unavailable, select and copy the link from its text field. Sign in and authorize in the browser, then enter the one-time authorization code in the plugin panel.
+1. **Connect your account.** Click the Xiaosuanli (小算狸) floating button at the bottom right of DSH, then select **Log in and connect Xiaosuanli (登录并连接小算狸)**. The plugin will try to open the authorization page. If it does not open, retry using **Open the Xiaosuanli login and authorization page (打开小算狸登录与授权页面)**, or select **Copy authorization link (复制授权链接)** and open it in your browser. If the clipboard is unavailable, select and copy the link from its text field. Sign in and authorize in the browser, then enter the one-time authorization code in the plugin panel.
 2. **Open a chapter.** Select a project and chapter, then start a new chat. The conversation is named “Project · Chapter”. You can also ask DSH to select and open one in chat.
 3. **Describe what you want.** Tell DSH the story, visual style, target length, aspect ratio, and dialogue language. Provide reference images or video if you have them. In a chat with an open chapter, type `@` to select chapter characters, objects, scenes, documents, video nodes, or act nodes by name. These appear alongside DSH's existing file and conversation suggestions. Selecting a reference alone does not change content or start generation.
 4. **Refine through chat.** Review storyboards and generated results, and request changes. When you want a finished video, explicitly ask DSH to continue production and export it.
