@@ -1,6 +1,6 @@
 # Xiaosuanli Video Creation Plugin for DSH
 
-[简体中文](README.zh.md) · **English**
+[简体中文](README.md) · **English**
 
 Website: [www.xiaosuanli.com](https://www.xiaosuanli.com)
 

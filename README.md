@@ -1,6 +1,6 @@
 # 小算狸 DSH 视频生成插件
 
-**简体中文** · [English](README.md)
+**简体中文** · [English](README.en.md)
 
 官网：[www.xiaosuanli.com](https://www.xiaosuanli.com)
 
