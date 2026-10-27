@@ -205,7 +205,7 @@ window.__ModuleLoader__.load({
             try {
               const current = await rpc('plugin-status');
               setState(current);
-              installed = !!targetVersion && current.installedVersion === targetVersion;
+              installed = !!targetVersion && targetVersion !== state?.version && current.installedVersion === targetVersion;
             } catch { /* Keep the original failure when status is unavailable. */ }
           }
           if (installed) {

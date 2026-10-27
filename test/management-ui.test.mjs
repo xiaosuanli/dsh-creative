@@ -6,7 +6,7 @@ const code = await readFile(new URL('../client.js', import.meta.url), 'utf8');
 const text = node => typeof node === 'string' ? node : (node?.props?.children || []).map(text).join('');
 const find = (node, predicate) => !node || typeof node !== 'object' ? undefined :
   predicate(node) ? node : (node.props?.children || []).map(child => find(child, predicate)).find(Boolean);
-async function panel({ update, status } = {}) {
+async function panel({ update, status, version = '1.0.2' } = {}) {
   const values = [], effects = [], calls = [];
   let index = 0, mounted = false, module, account, props, component;
   const React = {
@@ -16,7 +16,7 @@ async function panel({ update, status } = {}) {
     useRef(initial) { const key = index++; if (!(key in values)) values[key] = { current: initial }; return values[key]; },
     useEffect(effect) { if (!mounted) effects.push(effect); },
   };
-  const initial = { version: '1.0.2', installedVersion: '1.0.2', available: true, removable: true, channel: 'npm', uninstallCommand: 'remove-command' };
+  const initial = { version, installedVersion: version, available: true, removable: true, channel: 'npm', uninstallCommand: 'remove-command' };
   let checked = 0;
   runInNewContext(code, { URL, window: { __ModuleLoader__: { load(value) { module = value; } } },
     document: { createElement: () => ({ remove() {} }), head: { appendChild() {} } } });
@@ -65,4 +65,13 @@ test('lost update response reads installed version and never repeats installatio
   await ui.button('检查更新').props.onClick(); await ui.button('更新到 1.0.3').props.onClick();
   assert.ok(text(ui.render()).includes('更新已安装'));
   assert.equal(ui.calls.filter(c => c.method.endsWith('/plugin-update')).length, 1);
+});
+
+
+test('same-version channel rebuild cannot be confirmed from version alone after a lost response', async () => {
+  const ui = await panel({ version: '1.0.3', update: async () => { throw Error('connection closed'); } });
+  await ui.button('检查更新').props.onClick(); await ui.button('更新到 1.0.3').props.onClick();
+  assert.ok(!text(ui.render()).includes('更新已安装'));
+  assert.ok(text(ui.render()).includes('确认状态'));
+  assert.equal(ui.button('更新到 1.0.3'), undefined);
 });
