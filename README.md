@@ -1,79 +1,81 @@
-# Xiaosuanli Video Creation Plugin for DSH
+# 小算狸 DSH 视频生成插件
 
-[简体中文](README.zh.md) · **English**
+**简体中文** · [English](README.md)
 
-Website: [www.xiaosuanli.com](https://www.xiaosuanli.com)
+官网：[www.xiaosuanli.com](https://www.xiaosuanli.com)
 
-**Create, edit, and export AI videos through natural conversation in DeepSeek Harness (DSH).**
+**在 DeepSeek Harness（DSH）中，通过自然语言对话生成、修改并导出 AI 视频。**
 
-Make a video from an idea, turn a story or novel into a short film, create from a reference video, or revise the story and shots in an existing director project. After installing the plugin and connecting your Xiaosuanli account, tell DSH what you want to make, the visual style, and the desired length; continue the production and revisions through chat.
+当你想做一条视频、把故事或小说拍成短片、参考已有视频再创作，或修改已有导演工程中的剧情和镜头时，可以使用本插件。安装并连接小算狸账号后，直接告诉 DSH 想拍什么、用什么画风、需要多长，再通过聊天推进制作和修改。
 
-## What you can create
+Conversational AI video creation for DeepSeek Harness: turn stories and novel chapters into videos, remake reference videos, edit scenes through chat, and export a finished video.
 
-| Your goal | What you can say to DSH | What the plugin helps you do |
+## 适合哪些视频创作需求
+
+| 你想做什么 | 可以直接对 DSH 说 | 插件帮助你完成什么 |
 | --- | --- | --- |
-| Create an AI video or short film | “Make a 30-second science-fiction short in a realistic cinematic style.” | Plan the story and shots, create assets and video clips, and export the finished video. |
-| Turn a story into a video | “Turn this story into a one-minute video with Chinese dialogue.” | Adapt the story into scenes and shots, then continue production. |
-| Adapt a novel or article | “Condense this chapter into a two-minute 3D animated short and keep the final twist.” | Adapt the text, organize characters and scenes, create storyboards, and produce the video. |
-| Recreate or reinterpret a reference video | “Use my uploaded video as a reference, keep the main story, and change the style to ink-wash animation.” | Analyze the video, adjust the style, characters, or language as requested, and continue production. |
-| Reuse shared cards | “Apply the character cards from the shared card set to this chapter, keeping the existing connections.” | Find cards in the current script's shared library, import or replace chapter cards, and reuse image history and voices. |
-| Edit an existing director project | “Change the second shot to a close-up, make the character sound more hesitant, and leave the other shots unchanged.” | Adjust the specified story, shots, dialogue, assets, and generation settings. |
-| Finish and export | “Finish this chapter, select the generated results, and export the complete video.” | Check progress, resume work where needed, select results, and export the video. |
+| AI 视频生成、创意短片 | “帮我做一段 30 秒的科幻短片，写实电影风格。” | 根据创意规划故事和分镜，制作素材与视频，导出成片。 |
+| 故事转视频、文生视频 | “把这个故事拍成一分钟的视频，中文对白。” | 将故事转成可拍摄的剧情与镜头，再推进视频制作。 |
+| 小说转视频、文章改编 | “把这一章小说浓缩成两分钟的 3D 动漫短片，保留结尾反转。” | 改编正文、整理人物和场景、生成分镜、制作视频。 |
+| 参考视频复刻与再创作 | “参考我上传的视频，保留主要剧情，换成水墨动画。” | 解析参考视频，按要求调整画风、人物或语言，继续制作。 |
+| 复用共享卡片组 | “把共享卡片组里的人物卡应用到本章，保留已有连线。” | 查询当前剧本共享库，导入或替换本章卡片，复用图片历史和音色。 |
+| 修改已有导演工程 | “把第二个镜头改成近景，人物语气更犹豫，其他镜头保持不变。” | 调整指定剧情、镜头、对白、素材和生成设置。 |
+| 完成视频并导出 | “继续把这一章做完，选择生成结果并导出完整视频。” | 查询制作进度，处理需要恢复的部分，选择结果并导出成片。 |
 
-## What you provide and receive
+## 你提供什么，会得到什么
 
-- **Input:** An idea, story, article, novel chapter, or uploaded reference video. You can also specify the visual style, target length, aspect ratio, and dialogue language.
-- **Production:** DSH uses Xiaosuanli to adapt the story, create storyboards and character and scene reference images, and generate video clips. You can request changes throughout the process.
-- **Output:** Story, storyboards, assets, and generated results saved in your Xiaosuanli project, plus an exported video and an editing link when production is complete.
+- **输入**：一句创意、故事或文章正文、小说章节，或者上传的参考视频；你还可以指定画风、目标时长、画幅和对白语言。
+- **制作过程**：DSH 通过小算狸推进改编、分镜、人物与场景参考图、视频片段生成；你可以随时用对话提出修改。
+- **输出**：保存在小算狸工程中的剧情、分镜、素材与生成结果，以及制作完成后导出的视频和工程编辑链接。
 
-Available features depend on your account permissions and the tools provided by the plugin.
+具体可用功能以当前账号权限和插件实际提供的工具为准。
 
-## Install
+## 安装
 
-You'll need:
+先准备好：
 
-- DeepSeek Harness, version `0.2.1-rc.2` or later (`engines.dsh: >=0.2.1-rc.2`).
-- A [Xiaosuanli account](https://www.xiaosuanli.com) with the credits or benefits needed for generation.
+- 已安装并可正常使用的 DeepSeek Harness，最低版本为 `0.2.1-rc.2`（`engines.dsh: >=0.2.1-rc.2`）。
+- 一个[小算狸账号](https://www.xiaosuanli.com)，以及生成所需的积分或权益。
 
-Desktop and Web use **the same plugin package**, but install it into different profiles. If you use both, install it separately for each; a Web installation does not automatically appear in Desktop.
+Desktop 和 Web 使用**同一个插件包**，但安装到不同的 profile。请按实际使用方式选择；两种都用时，需要分别安装，安装在 Web 中的插件不会自动出现在 Desktop。
 
-| How you use DSH | Profile | Command-line tool |
+| 使用方式 | 安装 profile | 使用的命令行 |
 | --- | --- | --- |
-| Desktop app | `desktop` | The `dsh` bundled with Desktop |
-| Web interface | `web` | The `dsh` used to start the Web service |
+| Desktop 桌面应用 | `desktop` | Desktop 应用自带的 `dsh` |
+| Web 浏览器界面 | `web` | 启动 Web 服务的那套 `dsh` |
 
-### Web
+### Web 版
 
-Stop the running Web service, then run in a system terminal:
+先停止正在运行的 Web 服务，再在系统终端执行：
 
 ```sh
 dsh plugin --profile web add @xiaosuanli/dsh-plugin@1.0.4
 dsh web
 ```
 
-Start the Web service and refresh the browser.
+安装后启动 Web 服务，浏览器刷新页面即可。
 
-### Desktop (Windows)
+### Desktop 版（Windows）
 
-The easiest option is to install `@xiaosuanli/dsh-plugin@1.0.4` from the **Plugins (插件)** page on the left side of the app. To use the command line, first start Desktop once to complete initialization, then quit it completely from the app menu or system tray. Install into the `desktop` profile using the `dsh` bundled with Desktop. For the default Windows installation path, run in system PowerShell:
+优先使用应用左侧的“插件”页面安装 `@xiaosuanli/dsh-plugin@1.0.4`。使用命令行时，先启动过 Desktop 完成初始化，再从应用菜单或托盘完全退出；随后使用 Desktop 自带的 `dsh` 安装到 `desktop` profile。Windows 默认安装位置对应的系统 PowerShell 命令为：
 
 ```powershell
 $dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
 & $dsh plugin --profile desktop add @xiaosuanli/dsh-plugin@1.0.4
 ```
 
-Replace the path if you installed Desktop elsewhere, then reopen Desktop. Use the bundled CLI to manage the Desktop profile; a separate npm-installed `dsh` cannot manage it. See the [official Desktop installation instructions](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#bundled-command-runtime).
+自定义安装目录时替换上面的路径。安装完成后重新打开 Desktop。Desktop 的插件安装使用其自带 CLI，不能用 npm 安装的另一套 `dsh` 管理 `desktop` profile。[官方 Desktop 安装说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#bundled-command-runtime)。
 
-If the chat command tool reports `0xC0000142` even for simple commands, stop retrying and use the Plugins page or a system terminal to install. This is a host command-startup issue; installing the plugin will not fix the host sandbox.
+若聊天中的命令工具连简单命令也报 `0xC0000142`，停止反复重试，改用插件页面或系统终端完成安装；该错误属于宿主命令启动问题，插件安装不会修复宿主沙箱。
 
-## Update or uninstall
+## 更新与卸载
 
-Under **Settings → Xiaosuanli → Plugin Management (设置 → 小算狸 → 插件管理)**, you can view the version, check for updates, and uninstall. Version 1.0.4 fixes failed updates and inactive update buttons for installed plugins. If an update fails, select **Check for updates (检查更新)** to fetch a new candidate and try again. The buttons in versions 1.0.2 and 1.0.3 require a one-time upgrade first; use the installation command for your profile above, without uninstalling first. After updating, quit and reopen DSH completely; for Web, restart the service. If the management entry is unavailable, run the installation command for your profile again to update to 1.0.4.
+设置 → 小算狸 → 插件管理中可以查看版本、检查更新和卸载。1.0.4 修复了已安装插件的更新失败和失效更新按钮；失败后点击“检查更新”获取新候选再重试。1.0.2/1.0.3 的旧按钮本身需要先升级一次，可按下面对应 profile 的安装命令更新，无需先卸载。安装更新后完全退出并重新打开 DSH；Web 版重启对应服务。如果尚无此入口，重新执行上面对应 profile 的安装命令即可升级到 1.0.4。
 
-Uninstalling requires confirmation. If DSH refuses to remove a running plugin, completely quit the app or stop the Web service first, then run in a system terminal:
+卸载会要求确认。DSH 若拒绝卸载正在运行的插件，请先完全退出应用或停止 Web 服务，再在系统终端执行：
 
 ```powershell
-# Windows Desktop: use $dsh defined above
+# Windows Desktop：使用上面定义的 $dsh
 & $dsh plugin --profile desktop remove @xiaosuanli/dsh-plugin
 ```
 
@@ -82,30 +84,31 @@ Uninstalling requires confirmation. If DSH refuses to remove a running plugin, c
 dsh plugin --profile web remove @xiaosuanli/dsh-plugin
 ```
 
-Uninstalling does not delete your Xiaosuanli cloud projects or assets. When switching from a test package to the production npm package, reconnect your production account.
+卸载不删除小算狸云端工程和素材。测试包切换到正式 npm 包后，请重新连接正式站账号。
 
-## First use
+## 第一次使用
 
-1. **Connect your account.** Click the Xiaosuanli (小算狸) floating button at the bottom right of DSH, then select **Log in and connect Xiaosuanli (登录并连接小算狸)**. The plugin will try to open the authorization page. If it does not open, retry using **Open the Xiaosuanli login and authorization page (打开小算狸登录与授权页面)**, or select **Copy authorization link (复制授权链接)** and open it in your browser. If the clipboard is unavailable, select and copy the link from its text field. Sign in and authorize in the browser, then enter the one-time authorization code in the plugin panel.
-2. **Open a chapter.** Select a project and chapter, then start a new chat. The conversation is named “Project · Chapter”. You can also ask DSH to select and open one in chat.
-3. **Describe what you want.** Tell DSH the story, visual style, target length, aspect ratio, and dialogue language. Provide reference images or video if you have them. In a chat with an open chapter, type `@` to select chapter characters, objects, scenes, documents, video nodes, or act nodes by name. These appear alongside DSH's existing file and conversation suggestions. Selecting a reference alone does not change content or start generation.
-4. **Refine through chat.** Review storyboards and generated results, and request changes. When you want a finished video, explicitly ask DSH to continue production and export it.
+1. **连接账号**：点击 DSH 右下角的“小算狸”悬浮按钮，再点击“登录并连接小算狸”。插件会尝试打开授权页面；若浏览器未打开，点击“打开小算狸登录与授权页面”重试，或使用“复制授权链接”到系统浏览器打开。剪贴板不可用时可直接选中链接输入框手动复制。在浏览器登录并完成授权，将一次性授权码填回插件面板。
+2. **打开创作章节**：选择工程和章节，然后点击新建聊天；会话会命名为「工程名 · 章节名」。也可以直接在聊天中让 DSH 帮你选择并打开。
+3. **说出你的要求**：告诉 DSH 故事内容、画风、目标时长、画幅和对白语言；有参考图片或视频时，也可以一并提供。
+   在已打开章节的聊天中输入 `@`，可按名称选择本章人物、物品、场景、文档、视频节点和幕节点。引用与 DSH 原有文件、会话候选并存；只选择引用不会修改内容或开始生成。
+4. **边聊边调整**：查看分镜和生成结果，提出修改要求；需要完整视频时，明确让 DSH 继续制作并导出成片。
 
-If you don't have a project, start a new chat and say:
+没有工程时，可以在新聊天中说：
 
-> Use the Xiaosuanli Director Skill to create a project called “My First Short Film” and open its first chapter.
+> 使用小算狸导演 Skill，帮我创建一个叫《我的第一部短片》的工程，并打开第一章。
 
-After opening the chapter, describe the story you want to make. Creating an empty project or chapter does not start video generation.
+打开章节后，再描述你要制作的故事。创建空工程或章节本身不会自动开始生成视频。
 
-## Create through chat, edit on the web
+## 对话创作，也可以在网页里编辑
 
-Your results are saved in your Xiaosuanli director project. Open the returned editing link to review and adjust the story, shots, assets, and generation settings in the visual director workspace, then return to DSH to continue the conversation.
+DSH 的创作结果会保存到你的小算狸导演工程。你可以通过返回的编辑链接打开导演台，用图形界面查看和调整剧情、分镜、素材与生成设置，再回到 DSH 继续对话。
 
-Each chat is bound to one chapter. Start a new chat for a different chapter. The same chapter can be open in multiple chats; the chat with the most recent user message controls the current operation.
+一个聊天固定一个章节，需要制作另一章时请新建聊天。同一章节可以在不同聊天中打开，最近发送用户消息的聊天负责当前操作。
 
-## Usage notes
+## 使用说明
 
-- Image and video generation use your account's credits or benefits. Installing the plugin does not submit generation jobs.
-- Each chapter accepts up to **20,000 characters** of text; source videos for analysis and recreation must be **15–180 seconds** long. These are input limits; the target length of the finished video follows your creative request.
-- Account authorization is required after installation. If you lack permissions or credits, or a feature is unavailable, follow the guidance from DSH.
-- Generation takes time. You can ask for progress; when making a complete video, wait for the export to finish before opening or downloading the result.
+- 图片与视频生成使用小算狸账号的积分和权益；安装插件不会自动提交生成任务。
+- 每章文本输入最多 **20,000 字**；用于解析与复刻的源视频支持 **15～180 秒**。这是输入限制，成片目标时长按你的创作要求规划。
+- 安装后需要完成小算狸账号授权。缺少权限、积分不足或某项功能暂不可用时，按 DSH 给出的提示处理。
+- 生成需要时间。你可以询问当前进度；制作完整视频时，请等待成片导出完成，再打开或下载最终结果。
