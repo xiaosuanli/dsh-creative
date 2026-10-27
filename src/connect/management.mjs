@@ -8,6 +8,7 @@ const failures = {
   'bundle-in-use': '插件仍在使用，请完全退出 DSH 后执行下方卸载命令。',
   'not-removable': '此安装由 DSH 管理，无法在这里卸载，请使用 DSH 插件管理。',
   'management-required': '当前环境不允许修改插件，请使用 DSH 插件管理。',
+  'already-installed': '当前 DSH 拒绝覆盖安装，请使用 DSH 插件管理更新，或完全退出后安装新版本。',
   'incompatible-version': '新版本与当前 DSH 不兼容，请先升级 DSH。',
 };
 
@@ -64,7 +65,11 @@ export function pluginManagement({ manager, metadata, siteOrigin, profile, fetch
         const latest = await json('https://registry.npmjs.org/@xiaosuanli%2Fdsh-plugin/latest');
         if (latest.name !== packageName || !semver.valid(latest.version) || !latest.dsh?.bundle) throw new ConnectError('INVALID_UPDATE', 'npm 更新信息无效，请稍后重试。');
         version = latest.version;
-        spec = `${packageName}@${version}`;
+        // DSH's live manager treats name@version as a second installation of an
+        // existing bundle. Its documented tarball replacement path performs the
+        // package update and HMR reconciliation without removing this caller.
+        spec = `https://registry.npmjs.org/${packageName}/-/dsh-plugin-${version}.tgz`;
+        if (latest.dist?.tarball !== spec) throw new ConnectError('INVALID_UPDATE', 'npm 更新包地址与版本不匹配，请重新检查更新。');
       }
       const newer = semver.valid(metadata.version) && (semver.gt(version, metadata.version) ||
         !!release && semver.eq(version, metadata.version) && revision !== release.sourceRevision);

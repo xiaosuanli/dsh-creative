@@ -183,16 +183,37 @@ window.__ModuleLoader__.load({
         rpc('plugin-status').then(value => { if (active) setState(value); }).catch(e => { if (active) setError(e.message); });
         return () => { active = false; };
       }, [rpc]);
+      const [failedAction, setFailedAction] = React.useState('');
       const run = (action, payload) => async () => {
-        setBusy(true); setError(''); setNotice('');
+        setBusy(true); setError(''); setNotice(''); setFailedAction('');
+        const targetVersion = state?.latestVersion;
+        // A check replaces the candidate, and an install consumes it even when
+        // installation fails. Never leave the old button available for retry.
+        if (action !== 'plugin-uninstall') setState(value => value && ({ ...value, updateAvailable: false, candidateId: undefined }));
         try {
           const result = await rpc(action, payload);
           if (action === 'plugin-check-update') setState(result);
           else { setConfirm(false); if (result.changed) setRestart(true); }
-          if (['failed', 'cancelled', 'overridden'].includes(result.application)) setError(result.message);
-          else setNotice(result.message);
+          if (['failed', 'cancelled', 'overridden'].includes(result.application)) {
+            setError(result.message); setFailedAction(action);
+          } else setNotice(result.message);
         } catch (e) {
-          setError(action === 'plugin-check-update' ? e.message : '未收到操作完成结果，请在 DSH 插件管理中确认状态，必要时重启 DSH。');
+          // HMR may replace this plugin before its RPC response arrives. Read
+          // the installed version; an unknown response never resubmits install.
+          let installed = false;
+          if (action === 'plugin-update' && e.code !== 'STALE_UPDATE') {
+            try {
+              const current = await rpc('plugin-status');
+              setState(current);
+              installed = !!targetVersion && current.installedVersion === targetVersion;
+            } catch { /* Keep the original failure when status is unavailable. */ }
+          }
+          if (installed) {
+            setRestart(true); setNotice('更新已安装，请完全退出并重新打开 DSH 后使用。');
+          } else {
+            setFailedAction(action);
+            setError(e.code || action === 'plugin-check-update' ? e.message : '未收到操作完成结果，请在 DSH 插件管理中确认状态，必要时重启 DSH。');
+          }
         } finally { setBusy(false); }
       };
       const disabled = busy || !state?.available || restart || state?.restartRequired;
@@ -213,7 +234,7 @@ window.__ModuleLoader__.load({
           h('div', { className: 'xsl-management-actions' },
             h('button', { type: 'button', disabled: busy, onClick: () => setConfirm(false) }, '取消'),
             h('button', { type: 'button', className: 'xsl-danger', disabled: busy, onClick: run('plugin-uninstall', { confirmed: true }) }, '确认卸载'))),
-        error && state?.uninstallCommand && h('div', null,
+        error && failedAction === 'plugin-uninstall' && state?.uninstallCommand && h('div', null,
           h('p', { className: 'xsl-description' }, '如需手动卸载，请先退出 DSH，再在系统终端执行：'),
           h('input', { className: 'xsl-management-command', 'aria-label': '卸载命令', readOnly: true, value: state.uninstallCommand, onFocus: event => event.target.select() })),
         busy && h('p', { className: 'xsl-loading', role: 'status' }, '正在处理插件操作，请稍候…'));
@@ -483,7 +504,7 @@ window.__ModuleLoader__.load({
       });
       const rpc = async (endpoint, payload = {}, signal) => {
         const result = await ctx.connection.rpc.call('/api', 'xiaosuanli/' + endpoint, payload, signal);
-        if (!result.ok) throw new Error(result.error.message);
+        if (!result.ok) throw Object.assign(new Error(result.error.message), { code: result.error.code });
         return result.value;
       };
       ctx.effect(() => ctx.inputTriggers.registerSource({
