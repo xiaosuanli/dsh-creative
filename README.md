@@ -2,6 +2,8 @@
 
 [简体中文](README.zh.md) · **English**
 
+Website: [www.xiaosuanli.com](https://www.xiaosuanli.com)
+
 **Create, edit, and export AI videos through natural conversation in DeepSeek Harness (DSH).**
 
 Make a video from an idea, turn a story or novel into a short film, create from a reference video, or revise the story and shots in an existing director project. After installing the plugin and connecting your Xiaosuanli account, tell DSH what you want to make, the visual style, and the desired length; continue the production and revisions through chat.

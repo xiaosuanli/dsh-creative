@@ -2,6 +2,8 @@
 
 **简体中文** · [English](README.md)
 
+官网：[www.xiaosuanli.com](https://www.xiaosuanli.com)
+
 **在 DeepSeek Harness（DSH）中，通过自然语言对话生成、修改并导出 AI 视频。**
 
 当你想做一条视频、把故事或小说拍成短片、参考已有视频再创作，或修改已有导演工程中的剧情和镜头时，可以使用本插件。安装并连接小算狸账号后，直接告诉 DSH 想拍什么、用什么画风、需要多长，再通过聊天推进制作和修改。
