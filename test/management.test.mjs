@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { pluginManagement } from '../src/connect/management.mjs';
 
 const name = '@xiaosuanli/dsh-plugin';
+const tarball = version => `https://registry.npmjs.org/@xiaosuanli/dsh-plugin/-/dsh-plugin-${version}.tgz`;
+const npmRelease = version => ({ name, version, dsh: { bundle: {} }, dist: { tarball: tarball(version) } });
 const current = 'a'.repeat(40), next = 'b'.repeat(40);
 function fixture({ release, latest, installed = '1.0.2', result } = {}) {
   const calls = [];
@@ -20,15 +22,15 @@ const manifest = (revision = next) => ({ name: 'xiaosuanli-director', environmen
   channels: { dsh: { version: '1.0.2', artifact: `adapters/dsh/xiaosuanli-dsh-plugin-${revision.slice(0, 12)}.tgz` } } });
 
 test('npm check never downgrades the candidate; update is pinned and single use', async () => {
-  const old = fixture({ latest: { name, version: '1.0.1', dsh: { bundle: {} } } });
+  const old = fixture({ latest: npmRelease('1.0.1') });
   assert.equal((await old.service.check()).updateAvailable, false);
   await assert.rejects(old.service.update('arbitrary-url'), /检查更新/);
-  const newer = fixture({ latest: { name, version: '1.0.3', dsh: { bundle: {} } } });
+  const newer = fixture({ latest: npmRelease('1.0.3') });
   const check = await newer.service.check();
   assert.equal(check.updateAvailable, true);
   const outcome = await newer.service.update(check.candidateId);
   assert.equal(outcome.application, 'restart-required');
-  assert.deepEqual(newer.calls.at(-1), ['install', name + '@1.0.3', { saveExact: true }]);
+  assert.deepEqual(newer.calls.at(-1), ['install', tarball('1.0.3'), { saveExact: true }]);
   await assert.rejects(newer.service.update(check.candidateId), /检查更新/);
   assert.equal((await newer.service.status()).restartRequired, true);
 });
@@ -68,4 +70,26 @@ test('an already installed newer version requires restart before another update'
   const { service, calls } = fixture({ installed: '1.0.3' });
   assert.equal((await service.check()).restartRequired, true);
   assert.equal(calls.length, 0);
+});
+
+
+test('npm update rejects untrusted or mismatched tarballs before installing', async () => {
+  for (const artifact of ['https://example.com/plugin.tgz', tarball('1.0.2'), tarball('1.0.3') + '?redirect=other']) {
+    const { service, calls } = fixture({ latest: { ...npmRelease('1.0.3'), dist: { tarball: artifact } } });
+    await assert.rejects(service.check(), { code: 'INVALID_UPDATE' });
+    assert.equal(calls.some(call => call[0] === 'install'), false);
+  }
+});
+
+test('failed update can be checked and retried with a fresh candidate, without uninstalling', async () => {
+  const { service, calls } = fixture({ latest: npmRelease('1.0.3'), result: { changed: false, application: 'failed', error: { code: 'already-installed' } } });
+  const first = await service.check();
+  const failed = await service.update(first.candidateId);
+  assert.match(failed.message, /覆盖安装/);
+  await assert.rejects(service.update(first.candidateId), { code: 'STALE_UPDATE' });
+  const second = await service.check();
+  assert.notEqual(second.candidateId, first.candidateId);
+  await service.update(second.candidateId);
+  assert.equal(calls.filter(call => call[0] === 'install').length, 2);
+  assert.equal(calls.some(call => call[0] === 'remove'), false);
 });
