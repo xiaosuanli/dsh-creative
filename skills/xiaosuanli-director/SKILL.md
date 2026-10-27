@@ -11,7 +11,7 @@ description: 在 DeepSeek Harness 中连接小算狸、选择工程章节并使�
 2. 点击右下角“小算狸”悬浮按钮按需展开面板，或通过聊天初始化。`xiaosuanli_projects` 呈现工程，`xiaosuanli_chapters` 呈现所选工程的章节。用户选定后 `xiaosuanli_open_chapter`；面板也可为选定章节新建聊天。工程或章节列表为空时，主动转入下方首次使用流程。
 3. 当前对话固定一个章节。不同对话允许同章，以最后真实用户消息接管；旧对话发新消息可接管，打开/查询/后台续跑不抢权。身份由宿主钩子注入，不能自行伪造。
 4. 用户要求新建时用 `xiaosuanli_create_project` 或 `xiaosuanli_create_chapter`；已绑定聊天需要新建其它范围时另开聊天。先读回成功回执再继续。
-5. 读取[公共导演指引](references/director-workflow.md)。公共说明中的操作名统一加 `xiaosuanli_`；精确参数以当前工具 Schema 为准。
+5. 共享卡片组复用、本章编辑与制作时读取[公共导演指引](references/director-workflow.md)。公共说明中的操作名统一加 `xiaosuanli_`；精确参数以当前工具 Schema 为准。
 6. 返回 `editorUrl`，提醒用户可在同环境导演台网页图形化修改。网页改动后先刷新再写，保留用户修改。
 
 ## 引用本章素材与节点

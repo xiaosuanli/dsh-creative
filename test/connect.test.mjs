@@ -12,7 +12,7 @@ test('Connect preserves actionable business rejection without leaking the creden
 });
 
 const project = '11111111-1111-1111-1111-111111111111';
-function fixture({ storeValues = new Map(), client = { id: 'xiaosuanli-dsh', channel: 'dsh' }, apiOrigin = 'https://api.example.com' } = {}) {
+function fixture({ storeValues = new Map(), client = { id: 'xiaosuanli-dsh', channel: 'dsh' }, apiOrigin = 'https://api.example.com', extraTools = [] } = {}) {
   const calls = [];
   let fail;
   const children = new Map();
@@ -32,7 +32,7 @@ function fixture({ storeValues = new Map(), client = { id: 'xiaosuanli-dsh', cha
     if (url.endsWith('/token')) data = grant;
     if (url.endsWith('/capabilities')) data = { clientId: client.id, channel: client.channel, projectId: project,
       ...(actor ? { chapterId: actor.chapterId, sessionId: actor.authorizationId, canWrite: true } : {}),
-      tools: [{ operation: 'node_update', inputSchema: { type: 'object' } }, { operation: 'shell', inputSchema: { type: 'object' } }] };
+      tools: [...extraTools, { operation: 'node_update', inputSchema: { type: 'object' } }, { operation: 'shell', inputSchema: { type: 'object' } }] };
     if (url.endsWith('/account')) data = { clientId: client.id, channel: client.channel, projectId: project, username: 'user', credits: { availableCredits: 12 } };
     return { ok: true, json: async () => ({ code: 200, data }) };
   };
@@ -147,4 +147,30 @@ test('creation uses host conversation identity, never rebinds an existing chat, 
   assert.equal(new URL(value.editorUrl).origin, 'https://www.example.com');
   assert.equal(new URL(value.editorUrl).searchParams.get('project'), project);
   await assert.rejects(f.connect.create('project', { title: '新工程', requestId: 'new', userId: 'override' }, { conversationId: 'new-chat' }), { code: 'INVALID_ARGUMENTS' });
+});
+
+
+test('shared library tools preserve server schema, chapter identity and mutation replay keys', async () => {
+  const schema = { type: 'object', properties: { chapterId: { type: 'string' }, action: { enum: ['import'] } }, required: ['chapterId', 'action'] };
+  const f = fixture({ extraTools: [
+    { operation: 'library_list', inputSchema: { type: 'object' } },
+    { operation: 'library_manage', inputSchema: schema },
+    { operation: 'canvas_edit', inputSchema: { type: 'object' } },
+    { operation: 'workspace_action', inputSchema: { type: 'object' } },
+  ] });
+  await f.login();
+  const tools = (await f.connect.capabilities()).tools;
+  assert.deepEqual(tools.map(t => t.operation), ['library_list', 'library_manage', 'canvas_edit', 'node_update']);
+  assert.deepEqual(tools.find(t => t.operation === 'library_manage').inputSchema, schema);
+  await f.execute('library_list', { chapterId: 'chapter-a' });
+  const args = { chapterId: 'chapter-a', action: 'import', libraryResourceId: 'shared-person', resourceId: 'person-a', expectedVersion: 7, requestId: 'reuse-shared-person' };
+  await f.execute('library_manage', args);
+  const sent = f.calls.at(-1);
+  assert.ok(sent.url.endsWith('/tools/library_manage'));
+  assert.deepEqual(JSON.parse(sent.options.body), { ...args, projectId: project });
+  assert.equal(sent.options.headers.Authorization, 'Bearer private-child-conversation-a');
+  assert.equal(sent.options.headers['X-Director-User-Turn'], 'user-1');
+  await assert.rejects(f.execute('library_manage', { ...args, projectId: 'foreign' }), { code: 'INVALID_ARGUMENTS' });
+  await assert.rejects(f.execute('workspace_action', {}), { code: 'INVALID_OPERATION' });
+  await assert.rejects(f.connect.openChapter('conversation-a', 'chapter-b'), { code: 'CHAPTER_ALREADY_BOUND' });
 });

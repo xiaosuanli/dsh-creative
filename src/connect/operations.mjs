@@ -8,4 +8,8 @@ export const operations = new Set([
   'import_resume', 'import_select_chapters', 'director_start', 'director_retry',
   'director_resume', 'director_get', 'director_cancel', 'generation_start', 'export_start',
   'export_get', 'image_models',
+  'library_list', 'library_manage', 'canvas_edit', 'media_edit', 'video_configure',
+  'media_preview', 'generation_list', 'queue_cancel', 'generation_cancel_node',
+  'import_steps', 'import_budget', 'import_retry_speech',
+  'canvas_history', 'canvas_restore', 'story_reparse', 'review_acknowledge',
 ]);

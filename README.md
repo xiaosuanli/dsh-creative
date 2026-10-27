@@ -14,6 +14,7 @@ Conversational AI video creation for DeepSeek Harness: turn stories and novel ch
 | 故事转视频、文生视频 | “把这个故事拍成一分钟的视频，中文对白。” | 将故事转成可拍摄的剧情与镜头，再推进视频制作。 |
 | 小说转视频、文章改编 | “把这一章小说浓缩成两分钟的 3D 动漫短片，保留结尾反转。” | 改编正文、整理人物和场景、生成分镜、制作视频。 |
 | 参考视频复刻与再创作 | “参考我上传的视频，保留主要剧情，换成水墨动画。” | 解析参考视频，按要求调整画风、人物或语言，继续制作。 |
+| 复用共享卡片组 | “把共享卡片组里的人物卡应用到本章，保留已有连线。” | 查询当前剧本共享库，导入或替换本章卡片，复用图片历史和音色。 |
 | 修改已有导演工程 | “把第二个镜头改成近景，人物语气更犹豫，其他镜头保持不变。” | 调整指定剧情、镜头、对白、素材和生成设置。 |
 | 完成视频并导出 | “继续把这一章做完，选择生成结果并导出完整视频。” | 查询制作进度，处理需要恢复的部分，选择结果并导出成片。 |
 
@@ -44,7 +45,7 @@ Desktop 和 Web 使用**同一个插件包**，但安装到不同的 profile。�
 先停止正在运行的 Web 服务，再在系统终端执行：
 
 ```sh
-dsh plugin --profile web add @xiaosuanli/dsh-plugin@1.0.2
+dsh plugin --profile web add @xiaosuanli/dsh-plugin@1.0.3
 dsh web
 ```
 
@@ -52,11 +53,11 @@ dsh web
 
 ### Desktop 版（Windows）
 
-优先使用应用左侧的“插件”页面安装 `@xiaosuanli/dsh-plugin@1.0.2`。使用命令行时，先启动过 Desktop 完成初始化，再从应用菜单或托盘完全退出；随后使用 Desktop 自带的 `dsh` 安装到 `desktop` profile。Windows 默认安装位置对应的系统 PowerShell 命令为：
+优先使用应用左侧的“插件”页面安装 `@xiaosuanli/dsh-plugin@1.0.3`。使用命令行时，先启动过 Desktop 完成初始化，再从应用菜单或托盘完全退出；随后使用 Desktop 自带的 `dsh` 安装到 `desktop` profile。Windows 默认安装位置对应的系统 PowerShell 命令为：
 
 ```powershell
 $dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd"
-& $dsh plugin --profile desktop add @xiaosuanli/dsh-plugin@1.0.2
+& $dsh plugin --profile desktop add @xiaosuanli/dsh-plugin@1.0.3
 ```
 
 自定义安装目录时替换上面的路径。安装完成后重新打开 Desktop。Desktop 的插件安装使用其自带 CLI，不能用 npm 安装的另一套 `dsh` 管理 `desktop` profile。[官方 Desktop 安装说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#bundled-command-runtime)。
@@ -65,7 +66,7 @@ $dsh = "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\ds
 
 ## 更新与卸载
 
-设置 → 小算狸 → 插件管理中可以查看版本、检查更新和卸载。安装更新后完全退出并重新打开 DSH；Web 版重启对应服务。如果尚无此入口，重新执行上面对应 profile 的安装命令即可升级到 1.0.2。
+设置 → 小算狸 → 插件管理中可以查看版本、检查更新和卸载。安装更新后完全退出并重新打开 DSH；Web 版重启对应服务。如果尚无此入口，重新执行上面对应 profile 的安装命令即可升级到 1.0.3。
 
 卸载会要求确认。DSH 若拒绝卸载正在运行的插件，请先完全退出应用或停止 Web 服务，再在系统终端执行：
 

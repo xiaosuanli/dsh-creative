@@ -16,7 +16,7 @@ test('host registers isolated account UI RPC, installs tools after login and rem
   const projectId = '11111111-1111-1111-1111-111111111111';
   globalThis.fetch = async url => ({ ok: true, json: async () => ({ code: 200, data:
     url.endsWith('/token') ? { clientId: 'xiaosuanli-dsh', channel: 'dsh', projectId, accessToken: 'secret', scopes: ['project:read'], expiresAt: new Date(Date.now() + 600000).toISOString() } :
-    url.endsWith('/capabilities') ? { clientId: 'xiaosuanli-dsh', channel: 'dsh', projectId, tools: [{ operation: 'project_get', description: 'Read project', inputSchema: { type: 'object', properties: { projectId: { type: 'string' } }, required: ['projectId'] } }] } : { revoked: true } }) });
+    url.endsWith('/capabilities') ? { clientId: 'xiaosuanli-dsh', channel: 'dsh', projectId, tools: ['library_list', 'library_manage', 'canvas_edit', 'media_edit', 'video_configure', 'media_preview', 'generation_list', 'queue_cancel', 'generation_cancel_node', 'import_steps', 'import_budget', 'import_retry_speech', 'canvas_history', 'canvas_restore', 'story_reparse', 'review_acknowledge', 'shell', 'workspace_action'].map(operation => ({ operation, description: operation, inputSchema: { type: 'object', properties: { chapterId: { type: 'string' } } } })).concat([{ operation: 'project_get', description: 'Read project', inputSchema: { type: 'object', properties: { projectId: { type: 'string' } }, required: ['projectId'] } }]) } : { revoked: true } }) });
   const ctx = {
     credentials: { readRecord: async key => values.get(key), modifyRecord: async (key, fn) => values.set(key, await fn(values.get(key))), deleteRecord: async key => values.delete(key) },
     tools: { register(definition) { tools.set(definition.name, definition); return () => tools.delete(definition.name); } },
@@ -39,12 +39,16 @@ test('host registers isolated account UI RPC, installs tools after login and rem
     assert.equal(JSON.stringify(done).includes('secret'), false);
     assert.equal(skills[0].name, 'xiaosuanli-director');
     assert.ok(tools.has('xiaosuanli_project_get'));
+    for (const operation of ['library_list', 'library_manage', 'canvas_edit', 'media_edit', 'video_configure', 'media_preview', 'generation_list', 'queue_cancel', 'generation_cancel_node', 'import_steps', 'import_budget', 'import_retry_speech', 'canvas_history', 'canvas_restore', 'story_reparse', 'review_acknowledge']) assert.ok(tools.has('xiaosuanli_' + operation), operation);
+    assert.equal(tools.has('xiaosuanli_shell'), false);
+    assert.equal(tools.has('xiaosuanli_workspace_action'), false);
     assert.equal(tools.get('xiaosuanli_project_get').parameters.properties.projectId, undefined);
     assert.ok(tools.has('xiaosuanli_open_chapter'));
     assert.ok(tools.has('xiaosuanli_chapters'));
     const revoked = await handler('disconnect', {}, undefined, owner);
     assert.equal(revoked.ok, true);
     assert.equal(tools.has('xiaosuanli_project_get'), false);
+    assert.equal(tools.has('xiaosuanli_library_manage'), false);
     assert.ok(tools.has('xiaosuanli_connection'));
   } finally { globalThis.fetch = originalFetch; }
 });
