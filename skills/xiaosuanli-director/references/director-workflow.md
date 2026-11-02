@@ -53,6 +53,8 @@
 
 用 `library_manage(action=import)` 将 `libraryResourceId` 导入本章。替换已有卡片时传本章 `resourceId`，保留原连接、图片历史和音色；只有额外绑定到视频分镜时才传视频 `nodeId`。读回最新工程确认卡片与连接。共享库 `update` 会影响引用章节，执行前说明影响范围；`detach` 可保留本章素材并解除共享关联，删除仅在用户明确要求且无引用时执行。
 
+用户要求断开素材卡与视频的连接时，先用 `project_get` 默认概览读取本章 `connections` 和最新版本，按 `from` 素材与 `to` 视频核对目标，再调用 `canvas_edit(action=delete, kind=connection, nodeId=<连线自身的id>)`。`nodeId` 是连线 ID，不是素材或视频 ID；每次写入使用当前版本。读回确认指定连线已消失，素材卡、视频和其他连线仍在。章节权限或工具不可用时如实说明，不能声称已解除。
+
 `media_edit` 管理已有素材图、音色和首尾帧；`video_configure` 调整视频模式与参数。参数和可选动作以工具 Schema 为准，已有可用素材直接复用，不重复收费生成。`canvas_history` 查询版本，用户要求恢复时使用 `canvas_restore`；完成后刷新工程版本。
 
 `generation_list` 查询本章队列，`queue_cancel` 或 `generation_cancel_node` 取消对应任务；`import_steps`、`import_budget` 与 `import_retry_speech` 用于查看解析步骤、预算和重试原音，`review_acknowledge` 记录已复核项。用户要求查看已有图片或视频时，调用 `media_preview`，将每项 `artifacts[].url` 作为可点击的预览链接提供给用户；图片也可用 Markdown 图片展示，视频使用链接供用户打开播放。链接可能过期，需要时重新调用获取；`objectRef` 不是可播放地址。若返回 `previewError` 或没有 URL，说明该媒体的链接暂不可用，不要编造链接；取得链接不等于已经观看或下载。网页专属的选文件和适应画布按钮需在导演台网页操作。
@@ -69,7 +71,7 @@
 
 ## 视频制作与结果选择
 
-`videoNodes[].description` 是下一次视频生成的有效剧情输入，幕摘要和来源正文不会自动改写各镜头。必要的描述修正写入 `node_update(kind=video)`，明确当前片段的场景、参考人物、起始状态、运镜、连续动作、表情及完整对白/声音；时间从该片段 0 秒起算，并与节点时长一致。保留整片因果和前后状态。
+`videoNodes[].description` 是下一次视频生成的有效剧情输入，幕摘要和来源正文不会自动改写各镜头。必要的描述修正写入 `node_update(kind=video)`，明确当前片段的场景、参考人物、起始状态、运镜、连续动作、表情及完整对白/声音；时间从该片段 0 秒起算。节点生成配置保持 5–15 秒，剧情预计超过 15 秒时保留完整提示词及剧情时间并提示可能无法完整呈现，由用户决定是否调整分镜。保留整片因果和前后状态。
 
 解析后的资源卡是占位，视频入口不会代你生成参考图。先确认已连接必需素材均有实际图片且已绑定，再读回最新版本、节点时长、参考绑定与顺序。准备计划时保存输入快照，后续补绑不自动改变原计划；恢复时核对原任务实际采用的版本和素材。单镜用 `video_generate`，明确章节/幕范围可用 `generation_start`；显式使用用户要求的 resolution/aspectRatio。补齐缺失或更新新剧情时采用 `incremental:true`，保留未变化的成功片段。需要整幕重新导演时才用 `director_start`，它可能已提交素材和视频，不重复提交相同范围。
 
